@@ -47,8 +47,6 @@ namespace Transmitter.Tool
 
 			filePath = projectRootPath +$"/../{filePath}.json";
 
-			string allLines = "";
-
 			using (StreamWriter sw = new StreamWriter (filePath))
 			{
 				sw.WriteLine (content);
@@ -397,7 +395,7 @@ namespace Transmitter.Tool
 								if(!Directory.Exists(dirPath))
 								{
 									var fullDirPath = targetDirFullPath+"\\"+dirPath;
-									var dirStream = Directory.CreateDirectory(fullDirPath);
+									Directory.CreateDirectory(fullDirPath);
 									processeds.Add(dirPath);
 								}
 							}
