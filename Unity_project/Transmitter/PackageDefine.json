@@ -1,0 +1,26 @@
+{
+	"Apple":
+	{
+		"id":"int",
+		"value":"float"
+	},
+	"Tree":
+	{
+		"apples":["list","Apple"],
+		"root":
+		{
+			"type":"int",
+			"iter":"list"
+		},
+		"ownerWeapons":
+		{
+			"type":"GunType",
+			"iter":"list"
+		},
+		"presetWeapon":"GunType"
+	},
+	"Enum.GunType":
+	[
+		"ShotGun","Pistol","Submachine","Sniper_Rifle"
+	]
+}
