@@ -41,7 +41,7 @@ namespace Transmitter.Serialize
 			{
 				string newPackageDefineUtitltyText = Transmitter.Tool.Tool.SetJsonNode (packageDefineUtitltyText, "md5", newMd5Text);
 				Transmitter.Tool.Tool.SaveJson ("PackageDefineUtility", newPackageDefineUtitltyText);
-				//TODO 依靠設定檔 生成實體的IO File
+				ScriptEntityFactory.UpdateScript (messageSettingData);
 			}
 			else
 			{
