@@ -14,9 +14,35 @@ namespace Transmitter.Net.Model
 	[Serializable]
 	public class MessageData
 	{
-		public string channelName;
-		public string eventName;
-		public object[] objs;
+		string channelName;
+
+		public string ChannelName
+		{
+			get
+			{
+				return channelName;
+			}
+		}
+
+		string eventName;
+
+		public string EventName
+		{
+			get
+			{
+				return eventName;
+			}
+		}
+
+		object[] objs;
+
+		public object[] Objs
+		{
+			get
+			{
+				return objs;
+			}
+		}
 
 		#region 合成公式
 		// int (頻道長度)

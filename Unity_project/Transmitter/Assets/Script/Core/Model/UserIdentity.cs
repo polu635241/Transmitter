@@ -11,7 +11,24 @@ namespace Transmitter.Net.Model
 {
 	public class UserIdentity
 	{
-		public string IP;
-		public string Token;
+		public string IP
+		{
+			get
+			{
+				return ip;
+			}
+		}
+
+		string ip;
+
+		public string Token
+		{
+			get
+			{
+				return token;
+			}
+		}
+
+		string token;
 	}
 }
