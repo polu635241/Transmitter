@@ -30,5 +30,38 @@ namespace Transmitter.Net.Model
 		}
 
 		string token;
+
+		UserIdentity(){}
+
+		public static UserIdentity CreateByMsg(byte[] msg)
+		{
+			UserIdentity userIdentity = new UserIdentity ();
+			
+            MemoryStream memoryStream = null;
+			BinaryReader binaryReader = null;
+
+            try
+            {
+				memoryStream = new MemoryStream(msg);
+				binaryReader = new BinaryReader(memoryStream);
+
+                //讀取IP
+				userIdentity.ip = binaryReader.ReadString();
+
+                //讀取Token
+				userIdentity.token = binaryReader.ReadString();
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
+            }
+            finally
+            {
+                memoryStream?.Dispose();
+                binaryReader?.Dispose();
+            }
+
+			return userIdentity;
+		}
 	}
 }
