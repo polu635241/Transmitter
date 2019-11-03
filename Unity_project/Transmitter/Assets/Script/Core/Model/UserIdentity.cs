@@ -9,7 +9,8 @@ using UnityEngine;
 
 namespace Transmitter.Net.Model
 {
-	public class UserIdentity{
+	public class UserIdentity
+	{
 		public string IP;
 		public string Token;
 	}
