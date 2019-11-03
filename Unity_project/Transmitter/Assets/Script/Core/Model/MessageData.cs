@@ -64,14 +64,10 @@ namespace Transmitter.Net.Model
 				binaryWriter = new BinaryWriter(memoryStream);
 
 				//寫入頻道名稱
-				byte[] channelbytes = Encoding.UTF8.GetBytes(channelName);
-				binaryWriter.Write((ushort)channelbytes.Length);
-				binaryWriter.Write(channelbytes);
+				binaryWriter.Write(channelName);
 
 				//寫入事件名稱
-				byte[] eventbytes = Encoding.UTF8.GetBytes(eventName);
-				binaryWriter.Write((ushort)eventbytes.Length);
-				binaryWriter.Write(eventbytes);
+				binaryWriter.Write(eventName);
 
 				if(objs==null)
 				{
@@ -124,13 +120,9 @@ namespace Transmitter.Net.Model
 				memoryStream = new MemoryStream(byteData);
 				binaryReader = new BinaryReader(memoryStream);
 
-				ushort channelNameLen = binaryReader.ReadUInt16 ();
-				byte[] buffer = binaryReader.ReadBytes(channelNameLen);
-				messageData.channelName = Encoding.UTF8.GetString (buffer);
+				messageData.channelName = binaryReader.ReadString();
 
-				ushort eventNameLen = binaryReader.ReadUInt16 ();
-				buffer = binaryReader.ReadBytes (eventNameLen);
-				messageData.eventName = Encoding.UTF8.GetString (buffer);
+				messageData.eventName = binaryReader.ReadString();
 
 				ushort parsCount = binaryReader.ReadUInt16 ();
 
