@@ -54,5 +54,41 @@ namespace Transmitter.Model
             }
             return buffer;
         }
+
+        public static byte[] GetGroupBuffer(List<UserIdentity> userIdentitys)
+        {
+            byte[] buffer = null;
+            MemoryStream memoryStream = null;
+            BinaryWriter binaryWriter = null;
+
+            try
+            {
+                memoryStream = new MemoryStream();
+                binaryWriter = new BinaryWriter(memoryStream);
+
+                //寫入長度
+
+                binaryWriter.Write((ushort)userIdentitys.Count);
+
+                userIdentitys.ForEach(userIdentity=> 
+                {
+                    binaryWriter.Write(userIdentity.GetBuffer());
+                });
+                
+                binaryWriter.Flush();
+                buffer = memoryStream.ToArray();
+
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
+            }
+            finally
+            {
+                memoryStream?.Dispose();
+                binaryWriter?.Dispose();
+            }
+            return buffer;
+        }
     }
 }
