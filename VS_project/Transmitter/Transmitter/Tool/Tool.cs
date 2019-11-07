@@ -19,5 +19,13 @@ namespace Transmitter.Tool
 
             return false;
         }
+
+        public static void ForEach<TKey, TValue>(this Dictionary<TKey, TValue> dict, Action<TKey, TValue> callback)
+        {
+            foreach (KeyValuePair<TKey, TValue> item in dict)
+            {
+                callback.Invoke(item.Key, item.Value);
+            }
+        }
     }
 }

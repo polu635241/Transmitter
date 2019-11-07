@@ -116,22 +116,22 @@ namespace Transmitter.Net
 		{
 			EventNamePairDelegats eventNamePairDelegats;
 
-			if(callbackTable.TryGetValue(data.channelName,out eventNamePairDelegats))
+			if(callbackTable.TryGetValue(data.ChannelName,out eventNamePairDelegats))
 			{
 				ChannelBindCacheData bindCacheData;
 
-				if (eventNamePairDelegats.TryGetValue (data.eventName, out bindCacheData))
+				if (eventNamePairDelegats.TryGetValue (data.EventName, out bindCacheData))
 				{
-					bindCacheData.Trigger (data.objs);
+					bindCacheData.Trigger (data.Objs);
 				}
 				else
 				{
-					throw new UnityException ("指定的event name不存在 -> " + data.eventName);
+					throw new UnityException ("指定的event name不存在 -> " + data.EventName);
 				}
 			}
 			else
 			{
-				throw new UnityException ("指定的channel名稱不存在  -> " + data.channelName);
+				throw new UnityException ("指定的channel名稱不存在  -> " + data.ChannelName);
 			}
 		}
 
