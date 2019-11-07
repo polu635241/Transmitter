@@ -97,11 +97,11 @@ namespace Transmitter.Net.Model
 
 				if(objs==null)
 				{
-					binaryWriter.Write((ushort)0);
+					binaryWriter.Write((short)-1);
 				}
 				else
 				{
-					binaryWriter.Write((ushort)objs.Length);
+					binaryWriter.Write((short)objs.Length);
 
 					for (int i = 0; i < objs.Length; i++) 
 					{
@@ -150,17 +150,17 @@ namespace Transmitter.Net.Model
 
 				messageData.eventName = binaryReader.ReadString();
 
-				ushort parsCount = binaryReader.ReadUInt16 ();
+				short parsCount = binaryReader.ReadInt16 ();
 
-				if (parsCount > 0) 
+				if (parsCount >= 0) 
 				{
 					List<object> parTable = new List<object> ();
 
 					for (int i = 0; i < parsCount; i++) 
 					{
 						string objectTypeFullName = binaryReader.ReadString();
-						ushort parLen = binaryReader.ReadUInt16 ();
-						byte[] parBuffer = binaryReader.ReadBytes (parLen);
+						ushort parBufferLen = binaryReader.ReadUInt16 ();
+						byte[] parBuffer = binaryReader.ReadBytes (parBufferLen);
 
 						object obj = deserializeToObject(objectTypeFullName,parBuffer);
 
@@ -168,6 +168,11 @@ namespace Transmitter.Net.Model
 					}
 
 					messageData.objs = parTable.ToArray ();
+				}
+				else
+				{
+					//長度為負數 代表值為 null
+					messageData.objs = null;
 				}
 			}
 			catch(Exception e) 

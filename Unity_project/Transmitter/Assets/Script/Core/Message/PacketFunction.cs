@@ -54,7 +54,7 @@ namespace Transmitter.Serialize
 
             if (apples != null)
             {
-                binaryWriter.Write((ushort)apples.Count);
+                binaryWriter.Write((short)apples.Count);
 
                 for (int i = 0; i < apples.Count; i++)
                 {
