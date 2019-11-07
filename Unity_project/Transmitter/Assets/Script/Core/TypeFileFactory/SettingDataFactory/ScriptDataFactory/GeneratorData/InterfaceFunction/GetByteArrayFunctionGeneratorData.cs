@@ -72,7 +72,7 @@ namespace Transmitter.TypeSettingDataFactory.Model
 					
 				ProcessAddLine (string.Format ("if ({0} != null)", fieldSettingData.fieldName), 1);
 				ProcessAddLine ("{", 1);
-				string writeLengthLine = string.Format ("binaryWriter.Write((ushort){0});", nameAndLengthFiled);
+				string writeLengthLine = string.Format ("binaryWriter.Write((short){0});", nameAndLengthFiled);
 				ProcessAddLine (writeLengthLine,2);
 				AddTempLine ();
 
@@ -83,7 +83,7 @@ namespace Transmitter.TypeSettingDataFactory.Model
 				ProcessAddLine ("}", 1);
 				ProcessAddLine ("else", 1);
 				ProcessAddLine ("{", 1);
-				ProcessAddLine ("binaryWriter.Write (-1);", 2);
+				ProcessAddLine ("binaryWriter.Write ((short)-1);", 2);
 				ProcessAddLine ("}", 1);
 
 			}
