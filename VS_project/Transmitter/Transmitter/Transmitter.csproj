@@ -43,6 +43,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Model\CustomEventData.cs" />
+    <Compile Include="Model\UserIdentity.cs" />
     <Compile Include="Manager\NetworkManager.cs" />
     <Compile Include="Manager\CursorModule.cs" />
     <Compile Include="Program.cs" />
