@@ -59,7 +59,7 @@ namespace Transmitter.Manager
             {
                 ConsoleKeyInfo key = Console.ReadKey();
 
-                if (key.Key == ConsoleKey.Backspace && readText.Length > 0)
+                if (key.Key == ConsoleKey.Backspace)
                 {
                     DeletOneChar();
                 }
@@ -71,7 +71,7 @@ namespace Transmitter.Manager
                 {
                     MoveToNextCmd();
                 }
-                else if (key.Key == ConsoleKey.Enter && readText.Length > 0)
+                else if (key.Key == ConsoleKey.Enter)
                 {
                     FlushCmdLine();
                 }
@@ -89,12 +89,15 @@ namespace Transmitter.Manager
 
         void DeletOneChar()
         {
-            lock (cursorLocker)
+            if (readText.Length > 0)
             {
-                Console.ForegroundColor = ConsoleColor.White;
-                Console.SetCursorPosition(0, Console.CursorTop);
-                Console.Write(readText + "\b \b");
-                readText = readText.Substring(0, readText.Length - 1);
+                lock (cursorLocker)
+                {
+                    Console.ForegroundColor = ConsoleColor.White;
+                    Console.SetCursorPosition(0, Console.CursorTop);
+                    Console.Write(readText + "\b \b");
+                    readText = readText.Substring(0, readText.Length - 1);
+                }
             }
         }
 
@@ -142,21 +145,24 @@ namespace Transmitter.Manager
 
         void FlushCmdLine()
         {
-            lock (cursorLocker)
+            if (readText.Length > 0)
             {
-                Console.WriteLine(readText);
+                lock (cursorLocker)
+                {
+                    Console.WriteLine(readText);
+                }
+
+                bool newOne = commandCaches.CheckAdd(readText);
+
+                if (newOne)
+                {
+                    lastCommandIndex = commandCaches.Count;
+                }
+
+                ReceiveMessage(readText);
+
+                readText = "";
             }
-
-            bool newOne = commandCaches.CheckAdd(readText);
-
-            if (newOne)
-            {
-                lastCommandIndex = commandCaches.Count;
-            }
-
-            ReceiveMessage(readText);
-
-            readText = "";
         }
 
         void ExitApplication()
