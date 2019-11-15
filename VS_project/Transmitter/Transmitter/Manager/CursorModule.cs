@@ -206,5 +206,19 @@ namespace Transmitter.Manager
                 }
             }
         }
+
+        public void WriteLine(string line)
+        {
+            lock (cursorLocker)
+            {
+                Console.WriteLine(line);
+            }
+        }
+
+        public void WriteLine(string formatStr, params object[] pars)
+        {
+            string processStr = string.Format(formatStr, pars);
+            WriteLine(processStr);
+        }
     }
 }
