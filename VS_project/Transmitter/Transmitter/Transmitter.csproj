@@ -44,9 +44,10 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Manager\NetworkManager.cs" />
-    <Compile Include="Manager\KeyInputManager.cs" />
+    <Compile Include="Manager\CursorModule.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Tool\Singleton.cs" />
     <Compile Include="Tool\TransmitterUtility.cs" />
     <Compile Include="Tool\Tool.cs" />
   </ItemGroup>
