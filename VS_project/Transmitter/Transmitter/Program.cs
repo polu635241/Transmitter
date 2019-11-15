@@ -9,11 +9,6 @@ namespace Transmitter
 {
     class Program
     {
-        #region locker 
-        static object cursorLocker = new object();
-        #endregion
-
-        static KeyInputManager keyInputManager;
         static NetworkManager networkManager;
 
         const int defaultPort = 9487;
@@ -56,12 +51,12 @@ namespace Transmitter
         static void InitManager(int port)
         {
             #region Input Manager
-            keyInputManager = new KeyInputManager(cursorLocker);
-            keyInputManager.BindKeyWordCallback("Send", SendMessageToClients);
+
+            CursorModule.Instance.BindKeyWordCallback("Send", SendMessageToClients);
             #endregion
 
             #region NetWork Manager
-            networkManager = new NetworkManager(cursorLocker, port);
+            networkManager = new NetworkManager(port);
             #endregion
 
         }
@@ -74,17 +69,11 @@ namespace Transmitter
                 string eventName = pars[1];
                 string msg = pars[2];
 
-                lock (cursorLocker)
-                {
-                    Console.WriteLine($"channelName -> {channelName}, eventName -> {eventName}, msg -> {msg}");
-                }
+                CursorModule.Instance.WriteLine($"channelName -> {channelName}, eventName -> {eventName}, msg -> {msg}");
             }
             catch (Exception e)
             {
-                lock (cursorLocker)
-                {
-                    Console.WriteLine(e.Message);
-                }
+                CursorModule.Instance.WriteLine(e.Message);
             }
         }
     }

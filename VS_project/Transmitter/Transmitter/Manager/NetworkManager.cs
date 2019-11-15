@@ -11,15 +11,12 @@ namespace Transmitter.Manager
 {
     public class NetworkManager
     {
-        object cursorLocker;
-
         object clientSocketsLocker = null;
         Socket serverSocket;
         List<Socket> clientSockets = new List<Socket>();
 
-        public NetworkManager(object cursorLocker, int port)
+        public NetworkManager(int port)
         {
-            this.cursorLocker = cursorLocker;
             clientSocketsLocker = new object();
 
             #region networkEvent
@@ -33,10 +30,8 @@ namespace Transmitter.Manager
             //绑定ip和端口  
             serverSocket.Bind(ipEndPoint);
             serverSocket.Listen(10);
-            lock (cursorLocker)
-            {
-                Console.WriteLine("啟動監聽{0}成功", serverSocket.LocalEndPoint.ToString());
-            }
+           
+            CursorModule.Instance.WriteLine("啟動監聽{0}成功", serverSocket.LocalEndPoint.ToString());
 
             Thread serverThread = new Thread(ListenClientConnect);
             serverThread.Start();
@@ -55,10 +50,7 @@ namespace Transmitter.Manager
                     clientSockets.Add(clientSocket);
                 }
 
-                lock (cursorLocker)
-                {
-                    Console.WriteLine("客戶端 {0} 成功連接", clientSocket.RemoteEndPoint.ToString());
-                }
+                CursorModule.Instance.WriteLine("客戶端 {0} 成功連接", clientSocket.RemoteEndPoint.ToString());
 
                 //把每個客戶端的thread錯開
                 Thread clientThead = new Thread(RecieveClientMessage);
@@ -84,11 +76,7 @@ namespace Transmitter.Manager
                     {
                         if (receiveLength == 0)
                         {
-                            lock (cursorLocker)
-                            {
-                                //斷開連接
-                                Console.WriteLine($"連接已斷開{m_ClientSocket.RemoteEndPoint.ToString()}");
-                            }
+                            CursorModule.Instance.WriteLine($"連接已斷開{m_ClientSocket.RemoteEndPoint.ToString()}");
 
                             RemoveClientSocket(m_ClientSocket);
                             break;
@@ -97,10 +85,7 @@ namespace Transmitter.Manager
                 }
                 catch (Exception ex)
                 {
-                    lock (cursorLocker)
-                    {
-                        Console.WriteLine(ex.Message);
-                    }
+                    CursorModule.Instance.WriteLine(ex.Message);
 
                     RemoveClientSocket(m_ClientSocket);
                     break;
