@@ -61,88 +61,118 @@ namespace Transmitter.Manager
 
                 if (key.Key == ConsoleKey.Backspace && readText.Length > 0)
                 {
-                    lock (cursorLocker)
-                    {
-                        Console.ForegroundColor = ConsoleColor.White;
-                        Console.SetCursorPosition(0, Console.CursorTop);
-                        Console.Write(readText + "\b \b");
-                        readText = readText.Substring(0, readText.Length - 1);
-                    }
+                    DeletOneChar();
                 }
                 else if (key.Key == ConsoleKey.UpArrow)
                 {
-                    if (commandCaches.Count > 0 && lastCommandIndex > 0)
-                    {
-                        readText = commandCaches[--lastCommandIndex];
-                        lock (cursorLocker)
-                        {
-                            int currentTop = Console.CursorTop;
-                            Console.ForegroundColor = ConsoleColor.White;
-                            Console.SetCursorPosition(0, currentTop);
-                            Console.Write(new string(' ', Console.WindowWidth));
-                            Console.SetCursorPosition(0, currentTop);
-                            Console.Write(readText);
-                        }
-                    }
-                    else
-                    {
-                        Console.SetCursorPosition(Console.CursorLeft - 1, Console.CursorTop);
-                    }
+                    MoveToPrevCmd();
                 }
                 else if (key.Key == ConsoleKey.DownArrow)
                 {
-                    if (commandCaches.Count > 0 && lastCommandIndex < commandCaches.Count - 1)
-                    {
-                        readText = commandCaches[++lastCommandIndex];
-                        lock (cursorLocker)
-                        {
-                            int currentTop = Console.CursorTop;
-                            Console.ForegroundColor = ConsoleColor.White;
-                            Console.SetCursorPosition(0, currentTop);
-                            Console.Write(new string(' ', Console.WindowWidth));
-                            Console.SetCursorPosition(0, currentTop);
-                            Console.Write(readText);
-                        }
-                    }
-                    else
-                    {
-                        Console.SetCursorPosition(Console.CursorLeft - 1, Console.CursorTop);
-                    }
+                    MoveToNextCmd();
                 }
                 else if (key.Key == ConsoleKey.Enter && readText.Length > 0)
                 {
-                    lock (cursorLocker)
-                    {
-                        Console.WriteLine(readText);
-                    }
-
-                    bool newOne = commandCaches.CheckAdd(readText);
-
-                    if (newOne)
-                    {
-                        lastCommandIndex = commandCaches.Count;
-                    }
-
-                    ReceiveMessage(readText);
-
-                    readText = "";
+                    FlushCmdLine();
                 }
                 else if (key.Key == ConsoleKey.Escape)
                 {
-                    Environment.Exit(Environment.ExitCode);
+                    ExitApplication();
                 }
                 else if (char.IsControl(key.KeyChar) == false)
                 {
-                    readText += key.KeyChar;
-
-                    lock (cursorLocker)
-                    {
-                        Console.ForegroundColor = ConsoleColor.White;
-                        Console.SetCursorPosition(0, Console.CursorTop);
-                        Console.Write(readText);
-                    }
+                    WriteOneChar(key);
                 }
 
+            }
+        }
+
+        void DeletOneChar()
+        {
+            lock (cursorLocker)
+            {
+                Console.ForegroundColor = ConsoleColor.White;
+                Console.SetCursorPosition(0, Console.CursorTop);
+                Console.Write(readText + "\b \b");
+                readText = readText.Substring(0, readText.Length - 1);
+            }
+        }
+
+        void MoveToPrevCmd()
+        {
+            if (commandCaches.Count > 0 && lastCommandIndex > 0)
+            {
+                readText = commandCaches[--lastCommandIndex];
+                lock (cursorLocker)
+                {
+                    int currentTop = Console.CursorTop;
+                    Console.ForegroundColor = ConsoleColor.White;
+                    Console.SetCursorPosition(0, currentTop);
+                    Console.Write(new string(' ', Console.WindowWidth));
+                    Console.SetCursorPosition(0, currentTop);
+                    Console.Write(readText);
+                }
+            }
+            else
+            {
+                Console.SetCursorPosition(Console.CursorLeft - 1, Console.CursorTop);
+            }
+        }
+
+        void MoveToNextCmd()
+        {
+            if (commandCaches.Count > 0 && lastCommandIndex < commandCaches.Count - 1)
+            {
+                readText = commandCaches[++lastCommandIndex];
+                lock (cursorLocker)
+                {
+                    int currentTop = Console.CursorTop;
+                    Console.ForegroundColor = ConsoleColor.White;
+                    Console.SetCursorPosition(0, currentTop);
+                    Console.Write(new string(' ', Console.WindowWidth));
+                    Console.SetCursorPosition(0, currentTop);
+                    Console.Write(readText);
+                }
+            }
+            else
+            {
+                Console.SetCursorPosition(Console.CursorLeft - 1, Console.CursorTop);
+            }
+        }
+
+        void FlushCmdLine()
+        {
+            lock (cursorLocker)
+            {
+                Console.WriteLine(readText);
+            }
+
+            bool newOne = commandCaches.CheckAdd(readText);
+
+            if (newOne)
+            {
+                lastCommandIndex = commandCaches.Count;
+            }
+
+            ReceiveMessage(readText);
+
+            readText = "";
+        }
+
+        void ExitApplication()
+        {
+            Environment.Exit(Environment.ExitCode);
+        }
+
+        void WriteOneChar(ConsoleKeyInfo key)
+        {
+            readText += key.KeyChar;
+
+            lock (cursorLocker)
+            {
+                Console.ForegroundColor = ConsoleColor.White;
+                Console.SetCursorPosition(0, Console.CursorTop);
+                Console.Write(readText);
             }
         }
 
