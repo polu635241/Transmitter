@@ -13,7 +13,7 @@ namespace Transmitter
         static object cursorLocker = new object();
         #endregion
 
-        static KeyInputManager keyInputManager;
+        static CursorModule keyInputManager;
         static NetworkManager networkManager;
 
         const int defaultPort = 9487;
@@ -56,7 +56,7 @@ namespace Transmitter
         static void InitManager(int port)
         {
             #region Input Manager
-            keyInputManager = new KeyInputManager(cursorLocker);
+            keyInputManager = new CursorModule(cursorLocker);
             keyInputManager.BindKeyWordCallback("Send", SendMessageToClients);
             #endregion
 

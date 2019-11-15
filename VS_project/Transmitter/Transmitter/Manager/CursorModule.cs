@@ -6,7 +6,7 @@ using Transmitter.Tool;
 
 namespace Transmitter.Manager
 {
-    public class KeyInputManager
+    public class CursorModule:Singleton<CursorModule>
     {
         Dictionary<string, List<Action<List<string>>>> callbackPairTable = new Dictionary<string, List<Action<List<string>>>>();
 
@@ -17,9 +17,9 @@ namespace Transmitter.Manager
         string readText = "";
         Thread readInputThread;
 
-        public KeyInputManager(object cursorLock)
+        public CursorModule()
         {
-            this.cursorLocker = cursorLock;
+            this.cursorLocker = new object();
 
             readInputThread = new Thread(ReadInput);
             readInputThread.Start();
