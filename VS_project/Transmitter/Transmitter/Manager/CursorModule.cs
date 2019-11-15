@@ -94,8 +94,9 @@ namespace Transmitter.Manager
                 lock (cursorLocker)
                 {
                     Console.ForegroundColor = ConsoleColor.White;
-                    Console.SetCursorPosition(0, Console.CursorTop);
-                    Console.Write(readText + "\b \b");
+                    //Console.SetCursorPosition(0, Console.CursorTop);
+                    //ReadKey的情況下 光標會後退 可是不會刪除顯示的字元 Read 才會真的刪除
+                    Console.Write(" \b");
                     readText = readText.Substring(0, readText.Length - 1);
                 }
             }
@@ -105,13 +106,15 @@ namespace Transmitter.Manager
         {
             if (commandCaches.Count > 0 && lastCommandIndex > 0)
             {
+                int curretLineLength = readText.Length;
                 readText = commandCaches[--lastCommandIndex];
                 lock (cursorLocker)
                 {
                     int currentTop = Console.CursorTop;
                     Console.ForegroundColor = ConsoleColor.White;
                     Console.SetCursorPosition(0, currentTop);
-                    Console.Write(new string(' ', Console.WindowWidth));
+                    //確保 當前行數完全被清除 在畫出下一行
+                    Console.Write(new string(' ', curretLineLength));
                     Console.SetCursorPosition(0, currentTop);
                     Console.Write(readText);
                 }
@@ -126,13 +129,15 @@ namespace Transmitter.Manager
         {
             if (commandCaches.Count > 0 && lastCommandIndex < commandCaches.Count - 1)
             {
+                int curretLineLength = readText.Length;
                 readText = commandCaches[++lastCommandIndex];
                 lock (cursorLocker)
                 {
                     int currentTop = Console.CursorTop;
                     Console.ForegroundColor = ConsoleColor.White;
                     Console.SetCursorPosition(0, currentTop);
-                    Console.Write(new string(' ', Console.WindowWidth));
+                    //確保 當前行數完全被清除 在畫出下一行
+                    Console.Write(new string(' ', curretLineLength));
                     Console.SetCursorPosition(0, currentTop);
                     Console.Write(readText);
                 }
@@ -174,11 +179,11 @@ namespace Transmitter.Manager
         {
             readText += key.KeyChar;
 
+            //依然重新輸入 確保字體顏色正確
             lock (cursorLocker)
             {
                 Console.ForegroundColor = ConsoleColor.White;
-                Console.SetCursorPosition(0, Console.CursorTop);
-                Console.Write(readText);
+                Console.Write($"\b{key.KeyChar}");
             }
         }
 
