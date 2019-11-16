@@ -6,6 +6,10 @@ using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
+using Transmitter.Tool;
+using Transmitter.Model;
+using Transmitter.Plugin;
+using Transmitter.DataStruct;
 
 namespace Transmitter.Manager
 {
@@ -15,9 +19,14 @@ namespace Transmitter.Manager
         Socket serverSocket;
         List<Socket> clientSockets = new List<Socket>();
 
+        Dictionary<ushort, List<Action<Socket, byte[]>>> networkEventsDict = new Dictionary<ushort, List<Action<Socket, byte[]>>>();
+        object networkEventsDictLocker = new object();
+
         public NetworkManager(int port)
         {
             clientSocketsLocker = new object();
+
+            networkEventsDictLocker = new object();
 
             #region networkEvent
 
@@ -117,6 +126,43 @@ namespace Transmitter.Manager
             lock (clientSocketsLocker)
             {
                 clientSockets.Remove(clientSocket);
+            }
+        }
+        public void BindNetworkEvent(ushort eventHeader, Action<Socket, byte[]> callback)
+        {
+            lock (networkEventsDictLocker)
+            {
+                List<Action<Socket, byte[]>> callbacks = null;
+
+                if (!networkEventsDict.TryGetValue(eventHeader, out callbacks))
+                {
+                    callbacks = new List<Action<Socket, byte[]>>();
+                    networkEventsDict.Add(eventHeader, callbacks);
+                }
+
+                callbacks.Add(callback);
+            }
+        }
+
+        public void UnBindNetworkEvent(ushort eventHeader, Action<Socket, byte[]> callback)
+        {
+            lock (networkEventsDictLocker)
+            {
+                List<Action<Socket, byte[]>> callbacks = null;
+
+                if (networkEventsDict.TryGetValue(eventHeader, out callbacks))
+                {
+                    bool removeSuccess = callbacks.Remove(callback);
+
+                    if (!removeSuccess)
+                    {
+                        CursorModule.Instance.WriteLine($"can't remove event -> {eventHeader}");
+                    }
+                }
+                else
+                {
+                    CursorModule.Instance.WriteLine($"can't find event -> {eventHeader}");
+                }
             }
         }
     }

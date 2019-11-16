@@ -10,13 +10,13 @@ namespace Transmitter.DataStruct
     {
         public static class NetworkEvents
         {
-            public const short GameMessage = 1001;
-            public const short AddUser = 1002;
-            public const short RemoveUser = 1003;
+            public const ushort GameMessage = 1001;
+            public const ushort AddUser = 1002;
+            public const ushort RemoveUser = 1003;
 
 
-            public const short NewUserReq = 1004;
-            public const short NewUserRes = 1004;
+            public const ushort NewUserReq = 1004;
+            public const ushort NewUserRes = 1004;
         }
     }
 }
