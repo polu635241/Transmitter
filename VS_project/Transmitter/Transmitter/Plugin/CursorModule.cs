@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 using System.Collections.Generic;
 using Transmitter.Tool;
 
-namespace Transmitter.Manager
+namespace Transmitter.Plugin
 {
     public class CursorModule:Singleton<CursorModule>
     {
