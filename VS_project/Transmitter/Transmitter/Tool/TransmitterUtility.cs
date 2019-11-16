@@ -6,6 +6,9 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.Runtime.Serialization.Formatters.Binary;
+using Transmitter.Tool;
+using Transmitter.DataStruct;
+using Transmitter.Plugin;
 
 namespace Transmitter.Tool
 {
@@ -16,9 +19,38 @@ namespace Transmitter.Tool
             MsgParseData msgParseData = new MsgParseData(channelName, eventName, msg);
 
             return msgParseData.GetBuffer();
+
+        public static Byte[] GetToClientMsg(ushort msgHeader, string jsonMsg)
+        {
+            byte[] msg = ParseStringToBuffer(jsonMsg);
+
+            return GetToClientMsg(msgHeader, jsonMsg);
+        }
+
+        public static Byte[] GetToClientMsg(ushort msgHeader, byte[] msg)
+        {
+            byte[] msgHeaderBuffer = BitConverter.GetBytes(msgHeader);
+
+            byte[] fullMsg = Tool.Combine(msgHeaderBuffer, msg);
+
+            return fullMsg;
+        }
+
+        /// <summary>
+        /// 封裝用　後續如果需要修改編碼方式　直接更改封裝方法就好
+        /// </summary>
+        /// <param name="msg"></param>
+        /// <returns></returns>
+        public static byte[] ParseStringToBuffer(string msg)
+        {
+            return Encoding.Default.GetBytes(msg);
         }
 
         class MsgParseData
+        public static string ParseBufferToString(byte[] msg)
+        {
+            return Encoding.Default.GetString(msg);
+        }
         {
             #region 合成公式
             // int (頻道長度)
