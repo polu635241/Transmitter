@@ -14,11 +14,16 @@ namespace Transmitter.Tool
 {
     public class TransmitterUtility
     {
-        public Byte[] GetToClientMsg(string channelName, string eventName, string msg)
+        public static Byte[] GetToClientGameMsg(string channelName, string eventName, string msg)
         {
-            MsgParseData msgParseData = new MsgParseData(channelName, eventName, msg);
+            ushort msgHeader = Consts.NetworkEvents.GameMessage;
 
-            return msgParseData.GetBuffer();
+            MsgParseData msgParseData = MsgParseData.Create(channelName, eventName, msg);
+
+            byte[] msgParseDataBuffer = msgParseData.GetBuffer();
+
+            return GetToClientMsg(msgHeader, msgParseDataBuffer);
+        }
 
         public static Byte[] GetToClientMsg(ushort msgHeader, string jsonMsg)
         {
@@ -46,11 +51,12 @@ namespace Transmitter.Tool
             return Encoding.Default.GetBytes(msg);
         }
 
-        class MsgParseData
         public static string ParseBufferToString(byte[] msg)
         {
             return Encoding.Default.GetString(msg);
         }
+
+        public class MsgParseData
         {
             #region 合成公式
             // int (頻道長度)
@@ -59,23 +65,89 @@ namespace Transmitter.Tool
             // int (事件長度)
             // string (事件)
 
-            // int (有幾個參數)
+            //ushort (長度)
+            //byte[] (msg)
 
-            // Loop :
-            // 參數型態
-            // 參數長度
-            // 參數
             #endregion
 
             string channelName;
-            string eventName;
-            string msg = "";
 
-            public MsgParseData(string channelName, string eventName, string msg)
+            public string ChannelName
             {
-                this.channelName = channelName;
-                this.eventName = eventName;
-                this.msg = msg;
+                get
+                {
+                    return channelName;
+                }
+            }
+
+            string eventName;
+
+            public string EventName
+            {
+                get
+                {
+                    return eventName;
+                }
+            }
+
+            string msg;
+
+            /// <summary>
+            /// 基於 版本相容性的問題 unity 對 unity傳遞才會透過 byte封裝 asp 對 unity的封裝透過json傳遞
+            /// </summary>
+            public string Msg
+            {
+                get
+                {
+                    return msg;
+                }
+            }
+
+            MsgParseData()
+            {
+
+            }
+
+            public static MsgParseData Create(string channelName, string eventName, string msg)
+            {
+                MsgParseData msgParseData = new MsgParseData();
+
+                msgParseData.channelName = channelName;
+                msgParseData.eventName = eventName;
+                msgParseData.msg = msg;
+
+                return msgParseData;
+            }
+
+            public static MsgParseData CreateFromMsg(byte[] msg)
+            {
+                MsgParseData msgParseData = new MsgParseData();
+
+                MemoryStream memoryStream = null;
+                BinaryReader binaryReader = null;
+
+                try
+                {
+                    memoryStream = new MemoryStream(msg);
+                    binaryReader = new BinaryReader(memoryStream);
+
+                    msgParseData.channelName = binaryReader.ReadString();
+
+                    msgParseData.eventName = binaryReader.ReadString();
+
+                    msgParseData.msg = binaryReader.ReadString();
+                }
+                catch (Exception e)
+                {
+                    CursorModule.Instance.WriteLine(e.Message);
+                }
+                finally
+                {
+                    memoryStream?.Dispose();
+                    binaryReader?.Dispose();
+                }
+
+                return msgParseData;
             }
 
             public byte[] GetBuffer()
@@ -90,22 +162,17 @@ namespace Transmitter.Tool
                     binaryWriter = new BinaryWriter(memoryStream);
 
                     //寫入頻道名稱
-                    byte[] channelbytes = Encoding.UTF8.GetBytes(channelName);
+                    byte[] channelbytes = ParseStringToBuffer(channelName);
                     binaryWriter.Write((ushort)channelbytes.Length);
                     binaryWriter.Write(channelbytes);
 
                     //寫入事件名稱
-                    byte[] eventbytes = Encoding.UTF8.GetBytes(eventName);
+                    byte[] eventbytes = ParseStringToBuffer(eventName);
                     binaryWriter.Write((ushort)eventbytes.Length);
                     binaryWriter.Write(eventbytes);
 
-                    //寫入傳遞給client的事件
-                    binaryWriter.Write((ushort)1);
-                    string fullName = typeof(string).FullName;
-                    binaryWriter.Write(fullName);
-                    byte[] objBuffer = ParseStringToBytes(msg);
-                    binaryWriter.Write((ushort)objBuffer.Length);
-                    binaryWriter.Write(objBuffer);
+                    //寫入傳遞給client的訊息
+                    binaryWriter.Write(msg);
 
                     binaryWriter.Flush();
                     buffer = memoryStream.ToArray();
@@ -113,7 +180,7 @@ namespace Transmitter.Tool
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine(e.Message);
+                    CursorModule.Instance.WriteLine(e.Message);
                 }
                 finally
                 {
@@ -121,13 +188,6 @@ namespace Transmitter.Tool
                     binaryWriter?.Dispose();
                 }
                 return buffer;
-            }
-            Byte[] ParseStringToBytes(string msg)
-            {
-                MemoryStream memoryStream = new MemoryStream();
-                BinaryWriter binaryWriter = new BinaryWriter(memoryStream);
-                binaryWriter.Write(msg);
-                return memoryStream.GetBuffer();
             }
         }
     }

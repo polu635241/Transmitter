@@ -62,10 +62,10 @@ namespace Transmitter.Net.Model
 		/// <summary>
 		/// 透過實體物件建構
 		/// </summary>
-		public static MessageData CreateByDefaultFormat(string channelName,string eventName,params object[] objs)
+		public static MessageData Create(string channelName,string eventName,params object[] objs)
 		{
-			MessageData messageData = new MessageData ();
 			
+			MessageData messageData = new MessageData ();
 			messageData.channelName = channelName;
 			messageData.eventName = eventName;
 			messageData.objs = objs;
