@@ -205,7 +205,7 @@ namespace Transmitter.Net
 
 		public void AddSendMessage (string channelName, string eventName, System.Object[] objs)
 		{
-			MessageData data = MessageData.CreateByDefaultFormat (channelName, eventName, objs);
+			MessageData data = MessageData.Create (channelName, eventName, objs);
 
 			lock(waitSendLocker)
 			{

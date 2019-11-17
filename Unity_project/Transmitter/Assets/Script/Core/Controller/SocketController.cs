@@ -76,7 +76,7 @@ namespace Transmitter.Net
 					{
 						receiveThread = new Thread (RecieveServerMessage);
 						receiveThread.Start ();
-						onConnectionCallback?.Invoke ();
+						onConnectionCallback.Invoke ();
 					}
 					else 
 					{
