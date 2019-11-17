@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -15,22 +16,28 @@ namespace Transmitter.Manager
 {
     public class NetworkManager
     {
-        object clientSocketsLocker = null;
         Socket serverSocket;
-        List<Socket> clientSockets = new List<Socket>();
+
+        object identityCheckLocker = null;
+        Dictionary<Socket, UserData> userDataPairSocketTable = new Dictionary<Socket, UserData>();
 
         Dictionary<ushort, List<Action<Socket, byte[]>>> networkEventsDict = new Dictionary<ushort, List<Action<Socket, byte[]>>>();
         object networkEventsDictLocker = new object();
 
+
+        object clientSocketsLocker = null;
+        /// <summary>
+        /// 只包含正式握手完畢的client
+        /// </summary>
+        List<Socket> clientSockets = new List<Socket>();
+
         public NetworkManager(int port)
         {
-            clientSocketsLocker = new object();
-
-            networkEventsDictLocker = new object();
+            InitLocker();
 
             #region networkEvent
 
-            //不開出來填的原因是 小黑窗所在的網域就是伺服器本體才對
+            //不開出來填的原因是 小黑窗所在的網域即為伺服器所在的機器才對
             IPAddress ipAddress = IPAddress.Parse("127.0.0.1");
             IPEndPoint ipEndPoint = new IPEndPoint(ipAddress, port);
 
@@ -39,7 +46,7 @@ namespace Transmitter.Manager
             //绑定ip和端口  
             serverSocket.Bind(ipEndPoint);
             serverSocket.Listen(10);
-           
+
             CursorModule.Instance.WriteLine("啟動監聽{0}成功", serverSocket.LocalEndPoint.ToString());
 
             Thread serverThread = new Thread(ListenClientConnect);
@@ -54,16 +61,13 @@ namespace Transmitter.Manager
                 //內部有另一個 while(true) 去把程序卡在這裡
                 Socket clientSocket = serverSocket.Accept();
 
-                lock (clientSocketsLocker)
-                {
-                    clientSockets.Add(clientSocket);
-                }
-
                 CursorModule.Instance.WriteLine("客戶端 {0} 成功連接", clientSocket.RemoteEndPoint.ToString());
 
                 //把每個客戶端的thread錯開
                 Thread clientThead = new Thread(RecieveClientMessage);
                 clientThead.Start(clientSocket);
+
+                ClientSharkHand(clientSocket, 5);
             }
         }
 
@@ -79,7 +83,7 @@ namespace Transmitter.Manager
 
                     if (receiveLength > 0)
                     {
-                        SendMsgForAllClients(result);
+                        ReceiveNetworkMsg(m_ClientSocket, result);
                     }
                     else
                     {
@@ -102,32 +106,126 @@ namespace Transmitter.Manager
             }
         }
 
-
-        /// <summary>
-        /// 傳送給包含自己在內的所有client
-        /// </summary>
-        /// <param name="msg"></param>
-        void SendMsgForAllClients(byte[] msg)
+        void ClientSharkHand(Socket clientSocket, int timeout)
         {
-            lock (clientSocketsLocker)
+            ushort newUserUDID = 0;
+            string receiveToken = "";
+            bool successReceive = false;
+            ushort newUserReqHeader = Consts.NetworkEvents.NewUserReq;
+            ushort receiveNewUserReqHeader = Consts.NetworkEvents.NewUserRes;
+
+            Action<Socket, byte[]> receiveNewUserRes = (receiveSocket, msg) =>
             {
-                foreach (Socket socket in clientSockets)
+                if (receiveSocket == clientSocket)
                 {
-                    socket.Send(msg);
+                    receiveToken = TransmitterUtility.ParseBufferToString(msg);
+                    successReceive = true;
+                }
+            };
+
+            lock (identityCheckLocker)
+            {
+                //先把自己以外的玩家的資訊收集起來
+                List<UserData> userDatas = new List<UserData>();
+
+                foreach (var item in userDataPairSocketTable)
+                {
+                    userDatas.Add(item.Value);
+                }
+
+                //把屬於新的client的UDID 加在最後
+                newUserUDID = GetUDID();
+
+                UserDataGroup userDataGroup = new UserDataGroup() { UserDatas = userDatas, NewUserUDID = newUserUDID };
+                string userDataGroupJson = JsonUtility.ToJson(userDataGroup);
+
+                byte[] userIdentityGroupMsg = TransmitterUtility.GetToClientMsg(newUserReqHeader, userDataGroupJson);
+                BindNetworkEvent(receiveNewUserReqHeader, receiveNewUserRes);
+                clientSocket.Send(userIdentityGroupMsg);
+
+            }
+
+            //5秒內client沒回應視同斷線
+            SpinWait.SpinUntil(() =>
+            {
+                return successReceive;
+            }, timeout * 1000);
+
+            UnBindNetworkEvent(receiveNewUserReqHeader, receiveNewUserRes);
+
+            if (successReceive)
+            {
+                CursorModule.Instance.WriteLine($"{clientSocket.RemoteEndPoint.ToString()} -> token -> {receiveToken}");
+
+                UserData userData = UserData.Create(newUserUDID, receiveToken);
+
+                lock (identityCheckLocker)
+                {
+                    userDataPairSocketTable.Add(clientSocket, userData);
+
+                    lock (clientSocketsLocker)
+                    {
+                        clientSockets.Add(clientSocket);
+                    }
                 }
             }
-        }
-
-        void RemoveClientSocket(Socket clientSocket)
-        {
-            clientSocket.Shutdown(SocketShutdown.Both);
-            clientSocket.Close();
-
-            lock (clientSocketsLocker)
+            else
             {
-                clientSockets.Remove(clientSocket);
+                CursorModule.Instance.WriteLine($"{clientSocket.RemoteEndPoint.ToString()}");
             }
         }
+
+        public void ReceiveNetworkMsg(Socket socket, byte[] msg)
+        {
+            MemoryStream memoryStream = new MemoryStream(msg);
+            BinaryReader binaryReader = new BinaryReader(memoryStream);
+
+            try
+            {
+                ushort header = binaryReader.ReadUInt16();
+
+                int contentLength = (int)binaryReader.ReadUInt16();
+
+                byte[] msgContent = binaryReader.ReadBytes(contentLength);
+
+                //如果是遊戲間溝通的封包 直接轉送給其他玩家
+                if (header == Consts.NetworkEvents.GameMessage)
+                {
+                    clientSockets.ForEach(clientSocket =>
+                    {
+                        clientSocket.Send(msgContent);
+                    });
+                }
+                else
+                {
+                    TriggerNetworkEvent(socket, header, msgContent);
+                }
+            }
+            catch (Exception e)
+            {
+                CursorModule.Instance.WriteLine(e.Message);
+            }
+            finally 
+            {
+                memoryStream.Dispose();
+                binaryReader.Dispose();
+            }
+        }
+
+        void TriggerNetworkEvent(Socket socket, ushort header, byte[] msg)
+        {
+            
+        }
+
+        /// <summary>
+        /// 遊戲端互相溝通的 直接轉送給全部玩家即可
+        /// </summary>
+        /// <param name="msg"></param>
+        void ReceiveGameMessage(byte[] msg)
+        {
+            
+        }
+
         public void BindNetworkEvent(ushort eventHeader, Action<Socket, byte[]> callback)
         {
             lock (networkEventsDictLocker)
@@ -164,6 +262,38 @@ namespace Transmitter.Manager
                     CursorModule.Instance.WriteLine($"can't find event -> {eventHeader}");
                 }
             }
+        }
+
+        void RemoveClientSocket(Socket clientSocket)
+        {
+            clientSocket.Shutdown(SocketShutdown.Both);
+            clientSocket.Close();
+
+            lock (clientSocketsLocker)
+            {
+                clientSockets.Remove(clientSocket);
+            }
+        }
+
+        ushort enquence = 0;
+
+        /// <summary>
+        /// 程序開始啟動後 每當client被生成出來 就申請一個流水號
+        /// </summary>
+        /// <returns></returns>
+        ushort GetUDID()
+        {
+            enquence++;
+            return enquence;
+        }
+
+        void InitLocker()
+        {
+            clientSocketsLocker = new object();
+
+            identityCheckLocker = new object();
+
+            networkEventsDictLocker = new object();
         }
     }
 }
