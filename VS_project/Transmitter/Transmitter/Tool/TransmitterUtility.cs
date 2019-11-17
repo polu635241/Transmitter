@@ -36,7 +36,11 @@ namespace Transmitter.Tool
         {
             byte[] msgHeaderBuffer = BitConverter.GetBytes(msgHeader);
 
-            byte[] fullMsg = Tool.Combine(msgHeaderBuffer, msg);
+            ushort msgLength = (ushort)msg.Length;
+            byte[] msgLengthBuffer = BitConverter.GetBytes(msgLength);
+
+
+            byte[] fullMsg = Tool.Combine(msgHeaderBuffer, msgLengthBuffer, msg);
 
             return fullMsg;
         }

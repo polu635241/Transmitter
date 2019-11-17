@@ -3,14 +3,29 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Transmitter.Plugin;
 
 namespace Transmitter.Tool
 {
     public static class Tool
     {
-        public static T[] Combine<T>(T[] arr1, T[] arr2)
+        public static T[] Combine<T>(params T[][] arrs)
         {
-            return arr1.Concat(arr2).ToArray();
+            if (arrs.Length == 0)
+            {
+                CursorModule.Instance.WriteLine("長度為0無法進行合併");
+
+                return new T[0];
+            }
+
+            T[] collection = arrs[0];
+
+            for (int i = 1; i < arrs.Length; i++)
+            {
+                collection = collection.Concat(arrs[i]).ToArray();
+            }
+
+            return collection;
         }
 
         public static bool CheckAdd<T>(this List<T> m_List, T input)
