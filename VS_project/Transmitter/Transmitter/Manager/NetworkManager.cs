@@ -21,8 +21,8 @@ namespace Transmitter.Manager
         object identityCheckLocker = null;
         Dictionary<Socket, UserData> userDataPairSocketTable = new Dictionary<Socket, UserData>();
 
-        Dictionary<ushort, List<Action<Socket, byte[]>>> networkEventsDict = new Dictionary<ushort, List<Action<Socket, byte[]>>>();
         object networkEventsDictLocker = new object();
+        Dictionary<ushort, List<Action<Socket, byte[]>>> networkEventsDict = new Dictionary<ushort, List<Action<Socket, byte[]>>>();
 
 
         object clientSocketsLocker = null;
@@ -180,26 +180,19 @@ namespace Transmitter.Manager
             MemoryStream memoryStream = new MemoryStream(msg);
             BinaryReader binaryReader = new BinaryReader(memoryStream);
 
+            ushort header = 0;
+
+            int contentLength = 0;
+
+            byte[] msgContent = null;
+
             try
             {
-                ushort header = binaryReader.ReadUInt16();
+                header = binaryReader.ReadUInt16();
 
-                int contentLength = (int)binaryReader.ReadUInt16();
+                contentLength = (int)binaryReader.ReadUInt16();
 
-                byte[] msgContent = binaryReader.ReadBytes(contentLength);
-
-                //如果是遊戲間溝通的封包 直接轉送給其他玩家
-                if (header == Consts.NetworkEvents.GameMessage)
-                {
-                    clientSockets.ForEach(clientSocket =>
-                    {
-                        clientSocket.Send(msgContent);
-                    });
-                }
-                else
-                {
-                    TriggerNetworkEvent(socket, header, msgContent);
-                }
+                msgContent = binaryReader.ReadBytes(contentLength);
             }
             catch (Exception e)
             {
@@ -210,11 +203,37 @@ namespace Transmitter.Manager
                 memoryStream.Dispose();
                 binaryReader.Dispose();
             }
+
+            //如果是遊戲間溝通的封包 直接轉送給其他玩家
+            if (header == Consts.NetworkEvents.GameMessage)
+            {
+                //因為是保留轉送 所以要保持檔頭直接轉送
+                ReceiveGameMessage(msg);
+            }
+            else
+            {
+                TriggerNetworkEvent(socket, header, msgContent);
+            }
         }
 
         void TriggerNetworkEvent(Socket socket, ushort header, byte[] msg)
         {
-            
+            lock (networkEventsDictLocker)
+            {
+                List<Action<Socket, byte[]>> caches = null;
+
+                if(networkEventsDict.TryGetValue(header, out caches))
+                {
+                    caches.ForEach(cache=> 
+                    {
+                        cache.Invoke(socket, msg);
+                    });
+                }
+                else
+                {
+                    CursorModule.Instance.WriteLine($"找不到對應的註冊事件 header -> {header}");
+                }
+            }
         }
 
         /// <summary>
@@ -223,7 +242,14 @@ namespace Transmitter.Manager
         /// <param name="msg"></param>
         void ReceiveGameMessage(byte[] msg)
         {
-            
+            lock (clientSocketsLocker)
+            {
+                clientSockets.ForEach(clientSocket =>
+                {
+                    clientSocket.Send(msg);
+                });            
+            }
+
         }
 
         public void BindNetworkEvent(ushort eventHeader, Action<Socket, byte[]> callback)
