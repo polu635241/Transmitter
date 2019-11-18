@@ -8,6 +8,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.Serialization.Formatters.Binary;
 using UnityEngine;
+using Transmitter.DataStruct;
 
 namespace Transmitter.Net.Model
 {
@@ -73,12 +74,48 @@ namespace Transmitter.Net.Model
 			return messageData;
 		}
 
+		public byte[] GetBuffer(Func<string,object,byte[]> serializeObjToBuffer)
+		{
+			byte[] buffer = null;
+			MemoryStream memoryStream = null;
+			BinaryWriter binaryWriter = null;
+
+			try
+			{
+				memoryStream = new MemoryStream();
+				binaryWriter = new BinaryWriter(memoryStream);
+
+				ushort gameMsgHeader = Consts.NetworkEvents.GameMessage;
+				binaryWriter.Write(gameMsgHeader);
+
+				byte[] contentBuffer = GetContentBuffer(serializeObjToBuffer);
+				ushort contentBufferLength = (ushort)contentBuffer.Length;
+
+				binaryWriter.Write(contentBufferLength);
+				binaryWriter.Write(contentBuffer);
+
+				binaryWriter.Flush();
+				buffer = memoryStream.ToArray();
+
+			}
+			catch (Exception e) 
+			{
+				Debug.LogError (e.Message);
+			}
+			finally
+			{
+				memoryStream?.Dispose ();
+				binaryWriter?.Dispose ();
+			}
+			return buffer;
+		}
+
 		/// <summary>
 		/// 內部作為格式化之用 由外部傳入將單一object轉換成byte[]方法
 		/// </summary>
 		/// <returns>The buffer.</returns>
 		/// <param name="serializeObjToBuffer">Serialize object to buffer.</param>
-		public byte[] GetBuffer(Func<string,object,byte[]> serializeObjToBuffer)
+		byte[] GetContentBuffer(Func<string,object,byte[]> serializeObjToBuffer)
 		{
 			byte[] buffer = null;
 			MemoryStream memoryStream = null;

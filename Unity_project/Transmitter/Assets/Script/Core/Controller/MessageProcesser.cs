@@ -10,6 +10,7 @@ using System.Runtime.Serialization.Formatters.Binary;
 using UnityEngine;
 using Transmitter.Serialize;
 using Transmitter.Net.Model;
+using Transmitter.DataStruct;
 
 namespace Transmitter.Net
 {
@@ -134,17 +135,26 @@ namespace Transmitter.Net
 						{
 							try
 							{
-								MessageData parseData = MessageData.CreateByMsg(this.DeserializeProcess.DeserializeToObject ,byteData);
+								MemoryStream memoryStream = new MemoryStream(byteData);
+								BinaryReader binaryReader = new BinaryReader(memoryStream);
+								ushort header = binaryReader.ReadUInt16();
+								int contentBufferLength = (int)binaryReader.ReadUInt16();
+								byte[] contentBuffer = binaryReader.ReadBytes(contentBufferLength);
 
-								lock(parseDatasLocker)
+								if(header == Consts.NetworkEvents.GameMessage)
 								{
-									try
+									MessageData parseData = MessageData.CreateByMsg(this.DeserializeProcess.DeserializeToObject, contentBuffer);
+
+									lock(parseDatasLocker)
 									{
-										parseDatas.Add(parseData);
-									}
-									catch (Exception e)
-									{
-										Debug.LogError(e.Message);
+										try
+										{
+											parseDatas.Add(parseData);
+										}
+										catch (Exception e)
+										{
+											Debug.LogError(e.Message);
+										}
 									}
 								}
 
