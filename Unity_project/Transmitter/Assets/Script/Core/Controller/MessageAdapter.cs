@@ -112,7 +112,7 @@ namespace Transmitter.Net
 		}
 
 		//接收處理完成的封包 並找到對應的callback進行觸發
-		public void ReceiveProcessMessage(MessageData data)
+		public void ReceiveProcessMessage(GameMessageData data)
 		{
 			EventNamePairDelegats eventNamePairDelegats;
 

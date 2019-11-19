@@ -39,11 +39,11 @@ namespace Transmitter.Net
 		object waitReceiveLocker;
 		List<byte[]> waitReceivePool = new List<byte[]>();
 
-		object parseDatasLocker;
-		List<MessageData> parseDatas = new List<MessageData>();
+		object waitInvokeDatasLocker;
+		List<GameMessageData> receiveGameMessageDatas = new List<GameMessageData>();
 
-		object waitSendLocker;
-		List<MessageData> waitSendPool = new List<MessageData> ();
+		object waitSendDataLocker;
+		List<GameMessageData> waitSendgameMessageDatas = new List<GameMessageData> ();
 		Thread processSendMessageThread;
 
 		MessageAdapter messageAdapter;
@@ -53,8 +53,8 @@ namespace Transmitter.Net
 		public MessageProcesser(MessageAdapter messageRouter)
 		{
 			waitReceiveLocker = new object ();
-			parseDatasLocker = new object ();
-			waitSendLocker = new object ();
+			waitInvokeDatasLocker = new object ();
+			waitSendDataLocker = new object ();
 
 			deserializeProcess = new ObjectDeserialize_CustomType();
 			deserializeProcess.Init ();
@@ -75,16 +75,16 @@ namespace Transmitter.Net
 		//call in main thread
 		public void Update()
 		{
-			List<MessageData> cacheDatas = new List<MessageData> ();
+			List<GameMessageData> cacheDatas = new List<GameMessageData> ();
 			
-			lock(parseDatasLocker)
+			lock(waitInvokeDatasLocker)
 			{
 				try
 				{
-					if(parseDatas.Count>0)
+					if(receiveGameMessageDatas.Count>0)
 					{
-						cacheDatas = new List<MessageData>(parseDatas);
-						parseDatas.Clear();
+						cacheDatas = new List<GameMessageData>(receiveGameMessageDatas);
+						receiveGameMessageDatas.Clear();
 					}
 				}
 				catch (Exception e)
@@ -143,13 +143,13 @@ namespace Transmitter.Net
 
 								if(header == Consts.NetworkEvents.GameMessage)
 								{
-									MessageData parseData = MessageData.CreateByMsg(this.DeserializeProcess.DeserializeToObject, contentBuffer);
+									GameMessageData parseData = GameMessageData.CreateByMsg(this.DeserializeProcess.DeserializeToObject, contentBuffer);
 
-									lock(parseDatasLocker)
+									lock(waitInvokeDatasLocker)
 									{
 										try
 										{
-											parseDatas.Add(parseData);
+											receiveGameMessageDatas.Add(parseData);
 										}
 										catch (Exception e)
 										{
@@ -172,19 +172,19 @@ namespace Transmitter.Net
 		{
 			while(true)
 			{
-				List<MessageData> waitSendCaches = null;
+				List<GameMessageData> waitSendCaches = null;
 
-				lock(waitSendLocker)
+				lock(waitSendDataLocker)
 				{
-					waitSendCaches = new List<MessageData> (waitSendPool);
-					waitSendPool.Clear ();
+					waitSendCaches = new List<GameMessageData> (waitSendgameMessageDatas);
+					waitSendgameMessageDatas.Clear ();
 				}
 
 				if (waitSendCaches.Count==0) 
 				{
 					//只是一個離開的依據 並不是進入的條件 所以上方還要再lock一次
 					SpinWait.SpinUntil (() => {
-						return waitSendPool.Count > 0;
+						return waitSendgameMessageDatas.Count > 0;
 					});
 				}
 				else
@@ -215,11 +215,11 @@ namespace Transmitter.Net
 
 		public void AddSendMessage (string channelName, string eventName, System.Object[] objs)
 		{
-			MessageData data = MessageData.Create (channelName, eventName, objs);
+			GameMessageData data = GameMessageData.Create (channelName, eventName, objs);
 
-			lock(waitSendLocker)
+			lock(waitSendDataLocker)
 			{
-				waitSendPool.Add (data);
+				waitSendgameMessageDatas.Add (data);
 			}
 		}
 		#endregion

@@ -13,7 +13,7 @@ using Transmitter.DataStruct;
 namespace Transmitter.Net.Model
 {
 	[Serializable]
-	public class MessageData
+	public class GameMessageData
 	{
 		string channelName;
 
@@ -63,10 +63,10 @@ namespace Transmitter.Net.Model
 		/// <summary>
 		/// 透過實體物件建構
 		/// </summary>
-		public static MessageData Create(string channelName,string eventName,params object[] objs)
+		public static GameMessageData Create(string channelName,string eventName,params object[] objs)
 		{
 			
-			MessageData messageData = new MessageData ();
+			GameMessageData messageData = new GameMessageData ();
 			messageData.channelName = channelName;
 			messageData.eventName = eventName;
 			messageData.objs = objs;
@@ -171,9 +171,9 @@ namespace Transmitter.Net.Model
 		/// 透過封包建構 外部傳入將單一段byte[]轉換成object的方法 作為格式化的依據
 		/// </summary>
 		/// <param name="byteData">Byte data.</param>
-		public static MessageData CreateByMsg(Func<string,byte[],object> deserializeToObject ,byte[] byteData)
+		public static GameMessageData CreateByMsg(Func<string,byte[],object> deserializeToObject ,byte[] byteData)
 		{
-			MessageData messageData = new MessageData ();
+			GameMessageData messageData = new GameMessageData ();
 			
 			MemoryStream memoryStream = null;
 			BinaryReader binaryReader = null;
