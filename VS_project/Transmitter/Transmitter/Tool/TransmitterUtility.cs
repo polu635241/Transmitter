@@ -18,7 +18,7 @@ namespace Transmitter.Tool
         {
             byte[] msg = ParseStringToBuffer(jsonMsg);
 
-            return GetToClientMsg(msgHeader, jsonMsg);
+            return GetToClientMsg(msgHeader, msg);
         }
 
         public static Byte[] GetToClientMsg(ushort msgHeader, byte[] msg)

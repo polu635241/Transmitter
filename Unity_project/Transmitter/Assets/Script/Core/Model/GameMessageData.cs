@@ -46,10 +46,8 @@ namespace Transmitter.Net.Model
 		}
 
 		#region 合成公式
-		// int (頻道長度)
 		// string (頻道)
 
-		// int (事件長度)
 		// string (事件)
 
 		// int (有幾個參數)
