@@ -2,7 +2,7 @@
 using System.IO;
 using System.Collections.Generic;
 
-namespace Transmitter.Tool
+namespace Transmitter.Serialize
 {
 	public class ObjectDeserilizeBuffer
 	{

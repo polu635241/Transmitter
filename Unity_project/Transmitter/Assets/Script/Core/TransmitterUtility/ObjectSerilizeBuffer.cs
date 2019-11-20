@@ -3,7 +3,7 @@ using System.IO;
 using System.Collections.Generic;
 using Transmitter.Tool;
 
-namespace Transmitter.Tool
+namespace Transmitter.Serialize
 {
 	public class ObjectSerilizeBuffer
 	{

@@ -7,7 +7,7 @@ using System.Runtime.Serialization.Formatters.Binary;
 using UnityEngine;
 using Facebook.MiniJSON;
 
-namespace Transmitter.Tool
+namespace Transmitter.Serialize
 {
 	public static class BuiltInTypeUtility
 	{
