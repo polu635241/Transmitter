@@ -8,6 +8,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.Serialization.Formatters.Binary;
 using UnityEngine;
+using Transmitter.Serialize;
 using Transmitter.DataStruct;
 
 namespace Transmitter.Net.Model
@@ -25,13 +26,16 @@ namespace Transmitter.Net.Model
 			}
 		}
 
-		byte[] msg;
+		/// <summary>
+		/// 基於跨版本的相容性 與Server的溝通 透過Json傳遞 client 與 client的溝通 才會完全的序列化成byte[]
+		/// </summary>
+		string token;
 
-		public byte[] Msg
+		public string Token
 		{
 			get
 			{
-				return msg;
+				return token;
 			}
 		}
 
@@ -52,12 +56,12 @@ namespace Transmitter.Net.Model
 		/// <summary>
 		/// 透過實體物件建構
 		/// </summary>
-		public static LobbyMessageData Create(ushort header, byte[] msg)
+		public static LobbyMessageData Create(ushort header, string msg)
 		{
 			
 			LobbyMessageData messageData = new LobbyMessageData ();
 			messageData.header = header;
-			messageData.msg = msg;
+			messageData.token = msg;
 
 			return messageData;
 		}
@@ -75,10 +79,10 @@ namespace Transmitter.Net.Model
 
 				binaryWriter.Write(header);
 
-				ushort msgLength = (ushort)msg.Length;
+				byte[] msgBuffer = BuiltInTypeUtility.Serialize.StringConvertToBuffer(token);
 
-				binaryWriter.Write(msgLength);
-				binaryWriter.Write(msg);
+				binaryWriter.Write((ushort)msgBuffer.Length);
+				binaryWriter.Write(msgBuffer);
 
 				binaryWriter.Flush();
 				buffer = memoryStream.ToArray();
@@ -114,9 +118,11 @@ namespace Transmitter.Net.Model
 
 				messageData.header = binaryReader.ReadUInt16();
 
-				int msgBufferLength = (int)binaryReader.ReadUInt16();
+				int tokenBufferLength = (int)binaryReader.ReadUInt16();
 
-				msg = binaryReader.ReadBytes(msgBufferLength);
+				byte[] tokenBuffer = binaryReader.ReadBytes(tokenBufferLength);
+
+				messageData.token = BuiltInTypeUtility.Deserilize.BufferConvertToString(tokenBuffer);
 
 			}
 			catch(Exception e) 
