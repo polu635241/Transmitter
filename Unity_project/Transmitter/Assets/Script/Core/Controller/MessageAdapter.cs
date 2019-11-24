@@ -39,7 +39,47 @@ namespace Transmitter.Net
 	
 		List<Channel> channelTable = new List<Channel>();
 
-		Dictionary<string,EventNamePairDelegats> callbackTable = new Dictionary<string, EventNamePairDelegats>();
+		Dictionary<string,EventNamePairDelegats> gameCallbackTable = new Dictionary<string, EventNamePairDelegats> ();
+
+		Dictionary<ushort,List<Action<string>>> lobbyCallbackTable = new Dictionary<ushort, List<Action<string>>> ();
+
+		public void BindLobbyEvent(ushort header, Action<string> callback)
+		{
+			if (!IsMainThread) 
+			{
+				throw new UnityEngine.UnityException ("請只在unity thread進行bind");
+			}
+			
+			List<Action<string>> callbacks = null;
+
+			if (!lobbyCallbackTable.TryGetValue (header, out callbacks)) 
+			{
+				callbacks = new List<Action<string>> ();
+
+				lobbyCallbackTable.Add (header, callbacks);
+			}
+
+			callbacks.Add (callback);
+		}
+
+		public void UnBindLobbyEvent(ushort header, Action<string> callback)
+		{
+			if (!IsMainThread) 
+			{
+				throw new UnityEngine.UnityException ("請只在unity thread進行bind");
+			}
+
+			List<Action<string>> callbacks = null;
+
+			if (lobbyCallbackTable.TryGetValue (header, out callbacks)) 
+			{
+				callbacks.Remove (callback);
+			}
+			else
+			{
+				Debug.LogError ("找不到對應的緩存");
+			}
+		}
 
 		/// <summary>
 		/// 只能在主線程呼叫Init以便記錄unity thread主線程是誰
@@ -116,7 +156,7 @@ namespace Transmitter.Net
 		{
 			EventNamePairDelegats eventNamePairDelegats;
 
-			if(callbackTable.TryGetValue(data.ChannelName,out eventNamePairDelegats))
+			if(gameCallbackTable.TryGetValue(data.ChannelName,out eventNamePairDelegats))
 			{
 				ChannelBindCacheData bindCacheData;
 
@@ -140,23 +180,19 @@ namespace Transmitter.Net
 		{
 			EventNamePairDelegats eventNamePairDelegats;
 
-//			if(callbackTable.TryGetValue(data.ChannelName,out eventNamePairDelegats))
-//			{
-//				ChannelBindCacheData bindCacheData;
-//
-//				if (eventNamePairDelegats.TryGetValue (data.EventName, out bindCacheData))
-//				{
-//					bindCacheData.Trigger (data.Objs);
-//				}
-//				else
-//				{
-//					throw new UnityException ("指定的event name不存在 -> " + data.EventName);
-//				}
-//			}
-//			else
-//			{
-//				throw new UnityException ("指定的channel名稱不存在  -> " + data.ChannelName);
-//			}
+			List<Action<string>> callbacks = null;
+
+			if (lobbyCallbackTable.TryGetValue (data.Header, out callbacks))
+			{
+				callbacks.ForEach (callback=>
+					{
+						callback.Invoke(data.Token);
+					});
+			}
+			else
+			{
+				Debug.LogError ("invoke a not exist callback lobby event -> " + data.Header);
+			}
 		}
 
 		#region Invoke by Channel
@@ -325,10 +361,10 @@ namespace Transmitter.Net
 		{
 			EventNamePairDelegats eventNamePairDelegats;
 
-			if(!callbackTable.TryGetValue(channelName,out eventNamePairDelegats))
+			if(!gameCallbackTable.TryGetValue(channelName,out eventNamePairDelegats))
 			{
 				eventNamePairDelegats = new EventNamePairDelegats ();
-				callbackTable.Add (channelName,eventNamePairDelegats);
+				gameCallbackTable.Add (channelName,eventNamePairDelegats);
 			}
 
 			ChannelBindCacheData bindCacheData;
