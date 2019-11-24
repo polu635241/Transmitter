@@ -11,6 +11,7 @@ namespace Transmitter.DataStruct
         public static class NetworkEvents
         {
             public const ushort GameMessage = 1001;
+
             public const ushort AddUser = 1002;
             public const ushort RemoveUser = 1003;
 

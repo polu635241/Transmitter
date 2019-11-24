@@ -51,8 +51,7 @@ namespace Transmitter.Net
 		/// <param name="port">Port.</param>
 		/// <param name="connectedTrigger">Connected trigger.</param>
 		/// 
-		public SocketController (string serverIP, int port,
-			Action onConnectionCallback)
+		public SocketController (string serverIP, int port)
 		{
 			receiveMessageLocker = new object ();
 			receiveMessages = new List<byte[]> ();
@@ -62,10 +61,10 @@ namespace Transmitter.Net
 
 			Debug.Log($"開始嘗試連線 ip -> {serverIP}, port -> {port}");
 
-			ConnectionToServer (serverIP, port, onConnectionCallback);
+			ConnectionToServer (serverIP, port);
 		}
 
-		void ConnectionToServer (string serverIP,int port, Action onConnectionCallback)
+		void ConnectionToServer (string serverIP,int port)
 		{
 			tcpClient = new TcpClient ();
 
@@ -76,7 +75,6 @@ namespace Transmitter.Net
 					{
 						receiveThread = new Thread (RecieveServerMessage);
 						receiveThread.Start ();
-						onConnectionCallback.Invoke ();
 					}
 					else 
 					{

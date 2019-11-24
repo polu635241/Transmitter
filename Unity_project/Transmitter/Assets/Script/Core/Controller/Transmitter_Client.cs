@@ -6,7 +6,9 @@ using System.Net.Sockets;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Transmitter.Model;
 using Transmitter.Net.Model;
+using Transmitter.DataStruct;
 
 namespace Transmitter.Net
 {
@@ -36,42 +38,74 @@ namespace Transmitter.Net
 		string serverIP;
 		int port;
 
-		Channel playerStatusChannel = null;
+		LobbylBindCacheData lobbylBindCacheData;
 
 		public void Init()
 		{
 			messageAdapter = new MessageAdapter ();
-			playerStatusChannel = messageAdapter.BindChannel ($"{Presesrve_Start_Word}PlayerStatus");
+			lobbylBindCacheData = new LobbylBindCacheData ();
 		}
 
 		/// <summary>
 		/// 只能在主線程呼叫Init以便記錄unity thread主線程是誰
 		/// CallBack的用法舉例來說 等到連線成功 才切換場景之類的
 		/// </summary>
-		public void Connect (string serverIP,int port,Action onConnectionCallback) 
+		public void Connect (string serverIP,int port) 
 		{
 			//just cache
 			this.serverIP = serverIP;
 			this.port = port;
 			
 			DontDestroyOnLoad (this.gameObject);
-			socketController = new SocketController (serverIP, port,onConnectionCallback);
+			socketController = new SocketController (serverIP, port);
 		}
-
-		const string Presesrve_Start_Word = "Presesrve-";
 
 		public Channel BindChinnel(string channelNamel)
 		{
-			if (!channelNamel.StartsWith (Presesrve_Start_Word)) 
-			{
-				return messageAdapter.BindChannel (channelNamel);
-			}
-			else
-			{
-				throw new UnityException ($"{Presesrve_Start_Word} 開頭的頻道 是系統保留頻道 請勿使用");
-			}
-
+			return messageAdapter.BindChannel (channelNamel);
 		}
+
+		#region LobbyEvent
+
+		/// <summary>
+		/// 進入大廳時會回傳先前已經進入者的 UserData
+		/// </summary>
+		public void RegeistedOnJoinLobby(Action<List<UserData>> onJoinLobby)
+		{
+			//只有這個是交握後才觸發 不是由大廳事件列管
+			this.onJoinLobby = onJoinLobby;
+		}
+
+		event Action<List<UserData>> onJoinLobby;
+
+		//基於跨版本的相容性 unity與vs的溝通 透過Json傳遞 client 與 client的溝通 才會完全的序列化成byte[]
+
+		public void RegeistedOnUserAdd(Action<UserData> onUserAdd)
+		{
+			Action<string> processOnUserAdd = (jsonStr) => 
+			{
+				UserData userData = JsonUtility.FromJson<UserData>(jsonStr);
+				onUserAdd.Invoke(userData);
+			};
+
+			lobbylBindCacheData.AddMemberModifyCacheData (onUserAdd, processOnUserAdd);
+
+			messageAdapter.BindLobbyEvent (Consts.NetworkEvents.AddUser, processOnUserAdd);
+		}
+
+		public void RegeistedOnUserRemove(Action<UserData> onUserRemove)
+		{
+			Action<string> processOnUserRemove = (jsonStr) => 
+			{
+				UserData userData = JsonUtility.FromJson<UserData>(jsonStr);
+				onUserRemove.Invoke(userData);
+			};
+
+			lobbylBindCacheData.AddMemberModifyCacheData (onUserRemove, processOnUserRemove);
+			messageAdapter.BindLobbyEvent (Consts.NetworkEvents.AddUser, processOnUserRemove);
+		}
+
+		#endregion
 
 		// Update is called once per frame
 		void Update () 
