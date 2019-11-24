@@ -22,7 +22,7 @@ namespace Transmitter.Manager
         Dictionary<Socket, UserData> userDataPairSocketTable = new Dictionary<Socket, UserData>();
 
         object networkEventsDictLocker = new object();
-        Dictionary<ushort, List<Action<Socket, byte[]>>> networkEventsDict = new Dictionary<ushort, List<Action<Socket, byte[]>>>();
+        Dictionary<ushort, List<Action<Socket, string>>> networkEventsDict = new Dictionary<ushort, List<Action<Socket, string>>>();
 
 
         object clientSocketsLocker = null;
@@ -114,11 +114,12 @@ namespace Transmitter.Manager
             ushort newUserReqHeader = Consts.NetworkEvents.NewUserReq;
             ushort receiveNewUserReqHeader = Consts.NetworkEvents.NewUserRes;
 
-            Action<Socket, byte[]> receiveNewUserRes = (receiveSocket, msg) =>
+            Action<Socket, string> receiveNewUserRes = (receiveSocket, msgJson) =>
             {
                 if (receiveSocket == clientSocket)
                 {
-                    receiveToken = TransmitterUtility.ParseBufferToString(msg);
+                    NewUserRes newUserRes = JsonUtility.FromJson<NewUserRes>(msgJson);
+                    receiveToken = newUserRes.Token;
                     successReceive = true;
                 }
             };
@@ -136,7 +137,7 @@ namespace Transmitter.Manager
                 //把屬於新的client的UDID 加在最後
                 newUserUDID = GetUDID();
 
-                UserDataGroup userDataGroup = new UserDataGroup() { UserDatas = userDatas, NewUserUDID = newUserUDID };
+                NewUserReq userDataGroup = new NewUserReq() { UserDatas = userDatas, NewUserUDID = newUserUDID };
                 string userDataGroupJson = JsonUtility.ToJson(userDataGroup);
 
                 byte[] userIdentityGroupMsg = TransmitterUtility.GetToClientMsg(newUserReqHeader, userDataGroupJson);
@@ -220,13 +221,15 @@ namespace Transmitter.Manager
         {
             lock (networkEventsDictLocker)
             {
-                List<Action<Socket, byte[]>> caches = null;
+                List<Action<Socket, string>> caches = null;
 
                 if(networkEventsDict.TryGetValue(header, out caches))
                 {
                     caches.ForEach(cache=> 
                     {
-                        cache.Invoke(socket, msg);
+                        string msgJson = TransmitterUtility.ParseBufferToString(msg);
+
+                        cache.Invoke(socket, msgJson);
                     });
                 }
                 else
@@ -252,15 +255,15 @@ namespace Transmitter.Manager
 
         }
 
-        public void BindNetworkEvent(ushort eventHeader, Action<Socket, byte[]> callback)
+        public void BindNetworkEvent(ushort eventHeader, Action<Socket, string> callback)
         {
             lock (networkEventsDictLocker)
             {
-                List<Action<Socket, byte[]>> callbacks = null;
+                List<Action<Socket, string>> callbacks = null;
 
                 if (!networkEventsDict.TryGetValue(eventHeader, out callbacks))
                 {
-                    callbacks = new List<Action<Socket, byte[]>>();
+                    callbacks = new List<Action<Socket, string>>();
                     networkEventsDict.Add(eventHeader, callbacks);
                 }
 
@@ -268,11 +271,11 @@ namespace Transmitter.Manager
             }
         }
 
-        public void UnBindNetworkEvent(ushort eventHeader, Action<Socket, byte[]> callback)
+        public void UnBindNetworkEvent(ushort eventHeader, Action<Socket, string> callback)
         {
             lock (networkEventsDictLocker)
             {
-                List<Action<Socket, byte[]>> callbacks = null;
+                List<Action<Socket, string>> callbacks = null;
 
                 if (networkEventsDict.TryGetValue(eventHeader, out callbacks))
                 {

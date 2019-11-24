@@ -112,7 +112,7 @@ namespace Transmitter.Net
 		}
 
 		//接收處理完成的封包 並找到對應的callback進行觸發
-		public void ReceiveProcessMessage(GameMessageData data)
+		public void ReceiveProcessGameMessage(GameMessageData data)
 		{
 			EventNamePairDelegats eventNamePairDelegats;
 
@@ -133,6 +133,30 @@ namespace Transmitter.Net
 			{
 				throw new UnityException ("指定的channel名稱不存在  -> " + data.ChannelName);
 			}
+		}
+
+		//接收處理完成的封包 並找到對應的callback進行觸發
+		public void ReceiveProcessLobbyMessage(LobbyMessageData data)
+		{
+			EventNamePairDelegats eventNamePairDelegats;
+
+//			if(callbackTable.TryGetValue(data.ChannelName,out eventNamePairDelegats))
+//			{
+//				ChannelBindCacheData bindCacheData;
+//
+//				if (eventNamePairDelegats.TryGetValue (data.EventName, out bindCacheData))
+//				{
+//					bindCacheData.Trigger (data.Objs);
+//				}
+//				else
+//				{
+//					throw new UnityException ("指定的event name不存在 -> " + data.EventName);
+//				}
+//			}
+//			else
+//			{
+//				throw new UnityException ("指定的channel名稱不存在  -> " + data.ChannelName);
+//			}
 		}
 
 		#region Invoke by Channel

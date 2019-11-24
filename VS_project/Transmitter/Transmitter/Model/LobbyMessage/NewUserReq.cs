@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 namespace Transmitter.Model
 {
     [Serializable]
-    public class UserDataGroup
+    public class NewUserReq
     {
         /// <summary>
         /// 現存玩家的資料

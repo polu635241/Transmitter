@@ -27,7 +27,7 @@ namespace Transmitter.Net.Model
 		}
 
 		/// <summary>
-		/// 基於跨版本的相容性 與Server的溝通 透過Json傳遞 client 與 client的溝通 才會完全的序列化成byte[]
+		/// 基於跨版本的相容性 unity與vs的溝通 透過Json傳遞 client 與 client的溝通 才會完全的序列化成byte[]
 		/// </summary>
 		string token;
 
@@ -104,36 +104,13 @@ namespace Transmitter.Net.Model
 		/// 透過封包建構 外部傳入將單一段byte[]轉換成object的方法 作為格式化的依據
 		/// </summary>
 		/// <param name="byteData">Byte data.</param>
-		public static LobbyMessageData CreateByMsg(byte[] msg)
+		public static LobbyMessageData CreateByMsg(ushort header, byte[] contentMsg)
 		{
 			LobbyMessageData messageData = new LobbyMessageData ();
+
+			messageData.header = header;
 			
-			MemoryStream memoryStream = null;
-			BinaryReader binaryReader = null;
-
-			try
-			{
-				memoryStream = new MemoryStream(msg);
-				binaryReader = new BinaryReader(memoryStream);
-
-				messageData.header = binaryReader.ReadUInt16();
-
-				int tokenBufferLength = (int)binaryReader.ReadUInt16();
-
-				byte[] tokenBuffer = binaryReader.ReadBytes(tokenBufferLength);
-
-				messageData.token = BuiltInTypeUtility.Deserilize.BufferConvertToString(tokenBuffer);
-
-			}
-			catch(Exception e) 
-			{
-				Debug.LogError (e.Message);
-			}
-			finally
-			{
-				memoryStream?.Dispose ();
-				binaryReader?.Dispose ();
-			}
+			messageData.token = BuiltInTypeUtility.Deserilize.BufferConvertToString(contentMsg);
 
 			return messageData;
 		}
