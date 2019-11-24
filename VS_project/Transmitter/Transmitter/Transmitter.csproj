@@ -49,10 +49,11 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Manager\Consts.cs" />
+    <Compile Include="Model\Message\NewUserReq.cs" />
+    <Compile Include="Model\Message\NewUserRes.cs" />
     <Compile Include="Model\UserData.cs" />
     <Compile Include="Manager\NetworkManager.cs" />
     <Compile Include="Plugin\CursorModule.cs" />
-    <Compile Include="Model\UserDataGroup.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Tool\Singleton.cs" />

@@ -67,6 +67,7 @@ namespace Transmitter.Manager
                 Thread clientThead = new Thread(RecieveClientMessage);
                 clientThead.Start(clientSocket);
 
+                //基於處理上的簡易化 目前規格要握手結束後 才能接受下一個client的登入
                 ClientSharkHand(clientSocket, 5);
             }
         }
