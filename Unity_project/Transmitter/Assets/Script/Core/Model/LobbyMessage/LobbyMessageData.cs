@@ -56,12 +56,14 @@ namespace Transmitter.Net.Model
 		/// <summary>
 		/// 透過實體物件建構
 		/// </summary>
-		public static LobbyMessageData Create(ushort header, string msg)
+		public static LobbyMessageData Create(ushort header, object tokenObj)
 		{
-			
+			// 基於跨版本的相容性 unity與vs的溝通 透過Json傳遞 client 與 client的溝通 才會完全的序列化成byte[]
+			string token = JsonUtility.ToJson (tokenObj);
+
 			LobbyMessageData messageData = new LobbyMessageData ();
 			messageData.header = header;
-			messageData.token = msg;
+			messageData.token = token;
 
 			return messageData;
 		}

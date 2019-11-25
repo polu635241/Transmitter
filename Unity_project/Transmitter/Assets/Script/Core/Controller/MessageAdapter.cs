@@ -379,10 +379,16 @@ namespace Transmitter.Net
 			return bindCacheData;
 		}
 
-		public void Send(string channelName,string eventName,params System.Object[] objs)
+		public void SendGameMessage (string channelName, string eventName, params System.Object[] objs)
 		{
-			messageProcesser.AddSendMessage (channelName, eventName, objs);
+			messageProcesser.AddSendGameMessage (channelName, eventName, objs);
 		}
+
+		public void SendLobbyMessage (ushort header, object content)
+		{
+			messageProcesser.AddSendLobbyMessage (header, content);
+		}
+
 		#endregion
 
 		#region Factory

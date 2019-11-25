@@ -196,24 +196,31 @@ namespace Transmitter.Net
 		{
 			while(true)
 			{
-				List<GameMessageData> waitSendCaches = null;
+				List<GameMessageData> _waitSendGameMessageDatas = null;
+				List<LobbyMessageData> _waitSendLobbyMessageData = null;
 
 				lock(waitSendGameMessageLocker)
 				{
-					waitSendCaches = new List<GameMessageData> (waitSendGameMessageDatas);
+					_waitSendGameMessageDatas = new List<GameMessageData> (waitSendGameMessageDatas);
 					waitSendGameMessageDatas.Clear ();
 				}
 
-				if (waitSendCaches.Count==0) 
+				lock(waitSendLobbyMessageLocker)
+				{
+					_waitSendLobbyMessageData = new List<LobbyMessageData> (waitSendLobbyMessageDatas);
+					waitSendLobbyMessageDatas.Clear ();
+				}
+
+				if (_waitSendGameMessageDatas.Count == 0 && _waitSendLobbyMessageData.Count == 0)
 				{
 					//只是一個離開的依據 並不是進入的條件 所以上方還要再lock一次
 					SpinWait.SpinUntil (() => {
-						return waitSendGameMessageDatas.Count > 0;
+						return waitSendGameMessageDatas.Count > 0|| waitSendLobbyMessageDatas.Count > 0;
 					});
 				}
 				else
 				{
-					waitSendCaches.ForEach (cache => {
+					_waitSendGameMessageDatas.ForEach (cache => {
 						try 
 						{
 							byte[] message = cache.GetBuffer(this.serializeProcess.SerializeToBuffer);
@@ -222,6 +229,18 @@ namespace Transmitter.Net
 						catch (Exception e) 
 						{
 							Debug.LogError (e.Message);
+						}
+					});
+
+					_waitSendLobbyMessageData.ForEach (cache=>{
+						try
+						{
+							byte[] message = cache.GetBuffer();
+							messageAdapter.AddProcessedSendMessage(message);
+						}
+						catch(Exception e)
+						{
+							Debug.Log(e.Message);
 						}
 					});
 				}
@@ -237,7 +256,7 @@ namespace Transmitter.Net
 			}
 		}
 
-		public void AddSendMessage (string channelName, string eventName, System.Object[] objs)
+		public void AddSendGameMessage (string channelName, string eventName, System.Object[] objs)
 		{
 			GameMessageData data = GameMessageData.Create (channelName, eventName, objs);
 
@@ -246,6 +265,17 @@ namespace Transmitter.Net
 				waitSendGameMessageDatas.Add (data);
 			}
 		}
+
+		public void AddSendLobbyMessage (ushort header, object content)
+		{
+			LobbyMessageData data = LobbyMessageData.Create (header, content);
+
+			lock(waitSendLobbyMessageLocker)
+			{
+				waitSendLobbyMessageDatas.Add (data);
+			}
+		}
+
 		#endregion
 
 		public void Close()
