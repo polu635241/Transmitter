@@ -48,7 +48,6 @@ namespace Transmitter.Net
 
 		/// <summary>
 		/// 只能在主線程呼叫Init以便記錄unity thread主線程是誰
-		/// CallBack的用法舉例來說 等到連線成功 才切換場景之類的
 		/// </summary>
 		public void Connect (string serverIP,int port) 
 		{
