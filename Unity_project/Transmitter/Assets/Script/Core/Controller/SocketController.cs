@@ -44,28 +44,22 @@ namespace Transmitter.Net
 
 		Action recursivelyConnect = null;
 
-		/// <summary>
-		/// CallBack的用法舉例來說 等到連線成功 才切換場景之類的
-		/// </summary>
-		/// <param name="serverIP">Server I.</param>
-		/// <param name="port">Port.</param>
-		/// <param name="connectedTrigger">Connected trigger.</param>
-		/// 
-		public SocketController (string serverIP, int port)
+		MessageAdapter messageAdapter;
+
+		public SocketController(MessageAdapter messageAdapter)
 		{
 			receiveMessageLocker = new object ();
 			receiveMessages = new List<byte[]> ();
+			this.messageAdapter = messageAdapter;
+		}
 
+		public void ConnectionToServer (string serverIP,int port)
+		{
 			this.port = port;
 			this.serverIP = serverIP;
 
 			Debug.Log($"開始嘗試連線 ip -> {serverIP}, port -> {port}");
-
-			ConnectionToServer (serverIP, port);
-		}
-
-		void ConnectionToServer (string serverIP,int port)
-		{
+			
 			tcpClient = new TcpClient ();
 
 			recursivelyConnect = () => 

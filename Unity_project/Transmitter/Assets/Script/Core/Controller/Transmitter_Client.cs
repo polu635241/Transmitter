@@ -44,6 +44,7 @@ namespace Transmitter.Net
 		{
 			messageAdapter = new MessageAdapter ();
 			lobbylBindCacheData = new LobbylBindCacheData ();
+			socketController = new SocketController (messageAdapter);
 		}
 
 		/// <summary>
@@ -56,7 +57,7 @@ namespace Transmitter.Net
 			this.port = port;
 			
 			DontDestroyOnLoad (this.gameObject);
-			socketController = new SocketController (serverIP, port);
+			socketController.ConnectionToServer (serverIP, port);
 		}
 
 		public Channel BindChinnel(string channelNamel)
