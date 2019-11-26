@@ -24,6 +24,8 @@ namespace Transmitter.Manager
         object networkEventsDictLocker = new object();
         Dictionary<ushort, List<Action<Socket, string>>> networkEventsDict = new Dictionary<ushort, List<Action<Socket, string>>>();
 
+        Dictionary<Socket, Thread> receiveMessageDict = new Dictionary<Socket, Thread>();
+
         /// <summary>
         /// 只包含正式握手完畢的client
         /// </summary>
@@ -66,6 +68,8 @@ namespace Transmitter.Manager
                 //把每個客戶端的thread錯開
                 Thread clientThead = new Thread(RecieveClientMessage);
                 clientThead.Start(clientSocket);
+
+                receiveMessageDict.Add(clientSocket, clientThead);
 
                 //基於處理上的簡易化 目前規格要握手結束後 才能接受下一個client的登入
                 ClientSharkHand(clientSocket, 5);
@@ -251,7 +255,7 @@ namespace Transmitter.Manager
             {
                 clientSockets.ForEach(clientSocket =>
                 {
-                    clientSocket.Send(msg);
+                    TrySendMsgToSocket(clientSocket, msg);
                 });            
             }
 
@@ -297,11 +301,16 @@ namespace Transmitter.Manager
 
         void RemoveClientSocket(Socket clientSocket)
         {
-            clientSocket.Shutdown(SocketShutdown.Both);
-            clientSocket.Close();
 
             lock (identityCheckLocker)
             {
+                clientSocket.Shutdown(SocketShutdown.Both);
+                clientSocket.Close();
+
+                Thread receiveThread = receiveMessageDict[clientSocket];
+                receiveMessageDict.Remove(clientSocket);
+                receiveThread.Abort();
+
                 clientSockets.Remove(clientSocket);
 
                 List<Socket> needSendRemoveSockets = new List<Socket>(clientSockets);
@@ -312,8 +321,51 @@ namespace Transmitter.Manager
                 }
 
                 UserData removeUserData = userDataPairSocketTable[clientSocket];
-
+                userDataPairSocketTable.Remove(clientSocket);
                 SendRemoveUserData(removeUserData, needSendRemoveSockets);
+            }
+        }
+
+        //還在locker內 不要再次locker 可能是在發完訊息後 發現訊息發不出去 就直接當作斷線
+        void SendRemoveClientSocketInLocker(List<Socket> originSockets, List<Socket> needRemoveScoekts)
+        {
+            List<Socket> needSendSockets = new List<Socket>(originSockets);
+            List<UserData> removeUserDatas = new List<UserData>();
+
+            needRemoveScoekts.ForEach(socket =>
+            {
+                needSendSockets.Remove(socket);
+
+                UserData removeUserData = userDataPairSocketTable[socket];
+                userDataPairSocketTable.Remove(socket);
+                removeUserDatas.Add(removeUserData);
+
+                socket.Shutdown(SocketShutdown.Both);
+                socket.Close();
+
+                Thread receiveThread = receiveMessageDict[socket];
+                receiveMessageDict.Remove(socket);
+                receiveThread.Abort();
+            });
+
+            this.needRemoveSockets.Clear();
+
+            removeUserDatas.ForEach(userData =>
+            {
+                SendRemoveUserData(userData, needSendSockets);
+            });
+
+            CheckNeedRemoveSockets();
+        }
+
+        /// <summary>
+        /// 如果還是有新發現的socket訊息發不出去 就依然把它斷線
+        /// </summary>
+        void CheckNeedRemoveSockets()
+        {
+            if (needRemoveSockets.Count > 0)
+            {
+                SendRemoveClientSocketInLocker(clientSockets, needRemoveSockets);
             }
         }
 
@@ -321,14 +373,16 @@ namespace Transmitter.Manager
         {
             byte[] msg = TransmitterUtility.GetToClientMsg(Consts.NetworkEvents.RemoveUser, userData);
 
-            targetSockets.ForEach(socket=>socket.Send(msg));
+            targetSockets.ForEach(socket => TrySendMsgToSocket(socket, msg));
         }
 
         void SendAddUserData(UserData userData, List<Socket> targetSockets)
         {
             byte[] msg = TransmitterUtility.GetToClientMsg(Consts.NetworkEvents.AddUser, userData);
 
-            targetSockets.ForEach(socket => socket.Send(msg));
+            targetSockets.ForEach(socket => TrySendMsgToSocket(socket, msg));
+
+            CheckNeedRemoveSockets();
         }
 
         ushort enquence = 0;
@@ -349,5 +403,21 @@ namespace Transmitter.Manager
 
             networkEventsDictLocker = new object();
         }
+
+        void TrySendMsgToSocket(Socket socket, byte[] buffer)
+        {
+            try
+            {
+                socket.Send(buffer);
+            }
+            catch (Exception e)
+            {
+                CursorModule.Instance.WriteLine(e.Message);
+                //無法對他傳訊息 先當作斷線處理
+                needRemoveSockets.Add(socket);
+            }
+        }
+
+        List<Socket> needRemoveSockets = new List<Socket>();
     }
 }
