@@ -14,6 +14,14 @@ namespace Transmitter.Tool
 {
     public class TransmitterUtility
     {
+        public static Byte[] GetToClientMsg(ushort msgHeader, object msg)
+        {
+            //基於跨版本的相容性 unity與vs的溝通 透過Json傳遞 client 與 client的溝通 才會完全的序列化成byte[]
+            string jsonMsg = JsonUtility.ToJson(msg);
+
+            return GetToClientMsg(msgHeader, jsonMsg);
+        }
+
         public static Byte[] GetToClientMsg(ushort msgHeader, string jsonMsg)
         {
             byte[] msg = ParseStringToBuffer(jsonMsg);

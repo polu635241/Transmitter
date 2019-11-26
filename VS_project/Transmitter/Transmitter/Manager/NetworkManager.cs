@@ -24,12 +24,12 @@ namespace Transmitter.Manager
         object networkEventsDictLocker = new object();
         Dictionary<ushort, List<Action<Socket, string>>> networkEventsDict = new Dictionary<ushort, List<Action<Socket, string>>>();
 
-
-        object clientSocketsLocker = null;
         /// <summary>
         /// 只包含正式握手完畢的client
         /// </summary>
         List<Socket> clientSockets = new List<Socket>();
+
+        Socket waitSharkHandSocket;
 
         public NetworkManager(int port)
         {
@@ -139,12 +139,12 @@ namespace Transmitter.Manager
                 newUserUDID = GetUDID();
 
                 NewUserReq userDataGroup = new NewUserReq() { UserDatas = userDatas, NewUserUDID = newUserUDID };
-                string userDataGroupJson = JsonUtility.ToJson(userDataGroup);
 
-                byte[] userIdentityGroupMsg = TransmitterUtility.GetToClientMsg(newUserReqHeader, userDataGroupJson);
+                byte[] userIdentityGroupMsg = TransmitterUtility.GetToClientMsg(newUserReqHeader, userDataGroup);
                 BindNetworkEvent(receiveNewUserReqHeader, receiveNewUserRes);
                 clientSocket.Send(userIdentityGroupMsg);
 
+                waitSharkHandSocket = clientSocket;
             }
 
             //5秒內client沒回應視同斷線
@@ -165,10 +165,11 @@ namespace Transmitter.Manager
                 {
                     userDataPairSocketTable.Add(clientSocket, userData);
 
-                    lock (clientSocketsLocker)
-                    {
-                        clientSockets.Add(clientSocket);
-                    }
+                    waitSharkHandSocket = null;
+
+                    //先把自己登入的消息傳給自己以外的人 再把自己加入列表
+                    SendAddUserData(userData, clientSockets);
+                    clientSockets.Add(clientSocket);
                 }
             }
             else
@@ -246,7 +247,7 @@ namespace Transmitter.Manager
         /// <param name="msg"></param>
         void ReceiveGameMessage(byte[] msg)
         {
-            lock (clientSocketsLocker)
+            lock (identityCheckLocker)
             {
                 clientSockets.ForEach(clientSocket =>
                 {
@@ -299,10 +300,35 @@ namespace Transmitter.Manager
             clientSocket.Shutdown(SocketShutdown.Both);
             clientSocket.Close();
 
-            lock (clientSocketsLocker)
+            lock (identityCheckLocker)
             {
                 clientSockets.Remove(clientSocket);
+
+                List<Socket> needSendRemoveSockets = new List<Socket>(clientSockets);
+
+                if (waitSharkHandSocket != null)
+                {
+                    needSendRemoveSockets.Add(waitSharkHandSocket);
+                }
+
+                UserData removeUserData = userDataPairSocketTable[clientSocket];
+
+                SendRemoveUserData(removeUserData, needSendRemoveSockets);
             }
+        }
+
+        void SendRemoveUserData(UserData userData, List<Socket> targetSockets)
+        {
+            byte[] msg = TransmitterUtility.GetToClientMsg(Consts.NetworkEvents.RemoveUser, userData);
+
+            targetSockets.ForEach(socket=>socket.Send(msg));
+        }
+
+        void SendAddUserData(UserData userData, List<Socket> targetSockets)
+        {
+            byte[] msg = TransmitterUtility.GetToClientMsg(Consts.NetworkEvents.AddUser, userData);
+
+            targetSockets.ForEach(socket => socket.Send(msg));
         }
 
         ushort enquence = 0;
@@ -319,8 +345,6 @@ namespace Transmitter.Manager
 
         void InitLocker()
         {
-            clientSocketsLocker = new object();
-
             identityCheckLocker = new object();
 
             networkEventsDictLocker = new object();
