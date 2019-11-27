@@ -301,7 +301,6 @@ namespace Transmitter.Manager
 
         void RemoveClientSocket(Socket clientSocket)
         {
-
             lock (identityCheckLocker)
             {
                 clientSocket.Shutdown(SocketShutdown.Both);
@@ -326,49 +325,6 @@ namespace Transmitter.Manager
             }
         }
 
-        //還在locker內 不要再次locker 可能是在發完訊息後 發現訊息發不出去 就直接當作斷線
-        void SendRemoveClientSocketInLocker(List<Socket> originSockets, List<Socket> needRemoveScoekts)
-        {
-            List<Socket> needSendSockets = new List<Socket>(originSockets);
-            List<UserData> removeUserDatas = new List<UserData>();
-
-            needRemoveScoekts.ForEach(socket =>
-            {
-                needSendSockets.Remove(socket);
-
-                UserData removeUserData = userDataPairSocketTable[socket];
-                userDataPairSocketTable.Remove(socket);
-                removeUserDatas.Add(removeUserData);
-
-                socket.Shutdown(SocketShutdown.Both);
-                socket.Close();
-
-                Thread receiveThread = receiveMessageDict[socket];
-                receiveMessageDict.Remove(socket);
-                receiveThread.Abort();
-            });
-
-            this.needRemoveSockets.Clear();
-
-            removeUserDatas.ForEach(userData =>
-            {
-                SendRemoveUserData(userData, needSendSockets);
-            });
-
-            CheckNeedRemoveSockets();
-        }
-
-        /// <summary>
-        /// 如果還是有新發現的socket訊息發不出去 就依然把它斷線
-        /// </summary>
-        void CheckNeedRemoveSockets()
-        {
-            if (needRemoveSockets.Count > 0)
-            {
-                SendRemoveClientSocketInLocker(clientSockets, needRemoveSockets);
-            }
-        }
-
         void SendRemoveUserData(UserData userData, List<Socket> targetSockets)
         {
             byte[] msg = TransmitterUtility.GetToClientMsg(Consts.NetworkEvents.RemoveUser, userData);
@@ -381,8 +337,6 @@ namespace Transmitter.Manager
             byte[] msg = TransmitterUtility.GetToClientMsg(Consts.NetworkEvents.AddUser, userData);
 
             targetSockets.ForEach(socket => TrySendMsgToSocket(socket, msg));
-
-            CheckNeedRemoveSockets();
         }
 
         ushort enquence = 0;
@@ -413,11 +367,7 @@ namespace Transmitter.Manager
             catch (Exception e)
             {
                 CursorModule.Instance.WriteLine(e.Message);
-                //無法對他傳訊息 先當作斷線處理
-                needRemoveSockets.Add(socket);
             }
         }
-
-        List<Socket> needRemoveSockets = new List<Socket>();
     }
 }
