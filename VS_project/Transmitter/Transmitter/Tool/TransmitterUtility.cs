@@ -49,12 +49,19 @@ namespace Transmitter.Tool
         /// <returns></returns>
         public static byte[] ParseStringToBuffer(string msg)
         {
-            return Encoding.Default.GetBytes(msg);
+            MemoryStream memoryStream = new MemoryStream();
+            BinaryWriter binaryWriter = new BinaryWriter(memoryStream);
+            binaryWriter.Write(msg);
+
+            return memoryStream.GetBuffer();
         }
 
         public static string ParseBufferToString(byte[] msg)
         {
-            return Encoding.Default.GetString(msg);
+            MemoryStream memoryStream = new MemoryStream(msg);
+            BinaryReader binaryReader = new BinaryReader(memoryStream);
+
+            return binaryReader.ReadString();
         }
     }
 }
