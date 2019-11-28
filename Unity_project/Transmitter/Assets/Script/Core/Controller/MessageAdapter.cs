@@ -14,24 +14,7 @@ namespace Transmitter.Net
 	
 	public class MessageAdapter{
 
-		Thread unityThread;
-
 		MessageProcesser messageProcesser;
-
-		bool IsMainThread
-		{
-			get
-			{
-				if (unityThread != null) 
-				{
-					return unityThread.Equals (Thread.CurrentThread);
-				}
-				else
-				{
-					throw new UnityException ("尚未進行初始化");
-				}
-			}
-		}
 
 		object waitSendMessageLocker;
 
@@ -45,11 +28,6 @@ namespace Transmitter.Net
 
 		public void BindLobbyEvent(ushort header, Action<string> callback)
 		{
-			if (!IsMainThread) 
-			{
-				throw new UnityEngine.UnityException ("請只在unity thread進行bind");
-			}
-			
 			List<Action<string>> callbacks = null;
 
 			if (!lobbyCallbackTable.TryGetValue (header, out callbacks)) 
@@ -64,11 +42,6 @@ namespace Transmitter.Net
 
 		public void UnBindLobbyEvent(ushort header, Action<string> callback)
 		{
-			if (!IsMainThread) 
-			{
-				throw new UnityEngine.UnityException ("請只在unity thread進行bind");
-			}
-
 			List<Action<string>> callbacks = null;
 
 			if (lobbyCallbackTable.TryGetValue (header, out callbacks)) 
@@ -88,8 +61,6 @@ namespace Transmitter.Net
 		{
 			waitSendMessageLocker = new object ();
 			waitSendMessages = new List<byte[]> ();
-
-			unityThread = Thread.CurrentThread;
 			messageProcesser = new MessageProcesser (this);
 		}
 
@@ -200,11 +171,6 @@ namespace Transmitter.Net
 		#region Generic Bind
 		public void Bind(string channelName,string eventName,Action callback)
 		{
-			if (!IsMainThread) 
-			{
-				throw new UnityEngine.UnityException ("請只在unity thread進行bind");
-			}
-
 			ChannelBindCacheData bindCacheData = GetBindCacheData (channelName, eventName);
 
 			bindCacheData.BindAction (callback);
@@ -212,11 +178,6 @@ namespace Transmitter.Net
 
 		public void Bind(string channelName,string eventName,Action<object> callback)
 		{
-			if (!IsMainThread) 
-			{
-				throw new UnityEngine.UnityException ("請只在unity thread進行bind");
-			}
-
 			ChannelBindCacheData bindCacheData = GetBindCacheData (channelName, eventName);
 
 			bindCacheData.BindAction (callback);
@@ -224,11 +185,6 @@ namespace Transmitter.Net
 
 		public void Bind(string channelName,string eventName,Action<object,object> callback)
 		{
-			if (!IsMainThread) 
-			{
-				throw new UnityEngine.UnityException ("請只在unity thread進行bind");
-			}
-
 			ChannelBindCacheData bindCacheData = GetBindCacheData (channelName, eventName);
 
 			bindCacheData.BindAction (callback);
@@ -236,11 +192,6 @@ namespace Transmitter.Net
 
 		public void Bind(string channelName,string eventName,Action<object,object,object> callback)
 		{
-			if (!IsMainThread) 
-			{
-				throw new UnityEngine.UnityException ("請只在unity thread進行bind");
-			}
-
 			ChannelBindCacheData bindCacheData = GetBindCacheData (channelName, eventName);
 
 			bindCacheData.BindAction (callback);
@@ -248,11 +199,6 @@ namespace Transmitter.Net
 
 		public void Bind(string channelName,string eventName,Action<object,object,object,object> callback)
 		{
-			if (!IsMainThread) 
-			{
-				throw new UnityEngine.UnityException ("請只在unity thread進行bind");
-			}
-
 			ChannelBindCacheData bindCacheData = GetBindCacheData (channelName, eventName);
 
 			bindCacheData.BindAction (callback);
@@ -260,11 +206,6 @@ namespace Transmitter.Net
 
 		public void Bind(string channelName,string eventName,Action<object,object,object,object,object> callback)
 		{
-			if (!IsMainThread) 
-			{
-				throw new UnityEngine.UnityException ("請只在unity thread進行bind");
-			}
-
 			ChannelBindCacheData bindCacheData = GetBindCacheData (channelName, eventName);
 
 			bindCacheData.BindAction (callback);
@@ -274,12 +215,6 @@ namespace Transmitter.Net
 		#region Generic UnBind
 		public void UnBind(string channelName,string eventName,Action callback)
 		{
-			if (!IsMainThread) 
-			{
-				throw new UnityEngine.UnityException ("請只在unity thread進行bind");
-			}
-
-
 			ChannelBindCacheData bindCacheData = GetBindCacheData (channelName, eventName);
 
 			bindCacheData.UnBindAction (callback);
@@ -287,12 +222,6 @@ namespace Transmitter.Net
 
 		public void UnBind(string channelName,string eventName,Action<object> callback)
 		{
-			if (!IsMainThread) 
-			{
-				throw new UnityEngine.UnityException ("請只在unity thread進行bind");
-			}
-
-
 			ChannelBindCacheData bindCacheData = GetBindCacheData (channelName, eventName);
 
 			bindCacheData.UnBindAction (callback);
@@ -300,12 +229,6 @@ namespace Transmitter.Net
 
 		public void UnBind(string channelName,string eventName,Action<object,object> callback)
 		{
-			if (!IsMainThread) 
-			{
-				throw new UnityEngine.UnityException ("請只在unity thread進行bind");
-			}
-
-
 			ChannelBindCacheData bindCacheData = GetBindCacheData (channelName, eventName);
 
 			bindCacheData.UnBindAction (callback);
@@ -313,12 +236,6 @@ namespace Transmitter.Net
 
 		public void UnBind(string channelName,string eventName,Action<object,object,object> callback)
 		{
-			if (!IsMainThread) 
-			{
-				throw new UnityEngine.UnityException ("請只在unity thread進行bind");
-			}
-
-
 			ChannelBindCacheData bindCacheData = GetBindCacheData (channelName, eventName);
 
 			bindCacheData.UnBindAction (callback);
@@ -326,12 +243,6 @@ namespace Transmitter.Net
 
 		public void UnBind(string channelName,string eventName,Action<object,object,object,object> callback)
 		{
-			if (!IsMainThread) 
-			{
-				throw new UnityEngine.UnityException ("請只在unity thread進行bind");
-			}
-
-
 			ChannelBindCacheData bindCacheData = GetBindCacheData (channelName, eventName);
 
 			bindCacheData.UnBindAction (callback);
@@ -339,12 +250,6 @@ namespace Transmitter.Net
 
 		public void UnBind(string channelName,string eventName,Action<object,object,object,object,object> callback)
 		{
-			if (!IsMainThread) 
-			{
-				throw new UnityEngine.UnityException ("請只在unity thread進行bind");
-			}
-
-
 			ChannelBindCacheData bindCacheData = GetBindCacheData (channelName, eventName);
 
 			bindCacheData.UnBindAction (callback);
