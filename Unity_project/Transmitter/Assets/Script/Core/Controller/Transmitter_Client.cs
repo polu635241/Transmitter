@@ -78,6 +78,8 @@ namespace Transmitter.Net
 		// Update is called once per frame
 		void Update () 
 		{
+			socketController?.Update ();
+			
 			List<byte[]> newReceiveMessages = socketController?.PopAllReceiveMessages ();
 
 			newReceiveMessages?.ForEach (message => messageAdapter.ReceiveMessage (message));

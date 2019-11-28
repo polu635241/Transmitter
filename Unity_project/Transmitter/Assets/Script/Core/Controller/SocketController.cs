@@ -55,13 +55,25 @@ namespace Transmitter.Net
 		MessageAdapter messageAdapter;
 		Transmitter_Client transmitter_Client;
 
+		//由於coroutine只能在主線程跑 所以透過hook通知
+		bool runSharkHandHook;
+
+		bool connected;
+
+		object runSharkHandHookLocker;
+
 		public SocketController (MessageAdapter messageAdapter, Transmitter_Client transmitter_Client)
 		{
 			receiveMessageLocker = new object ();
 			receiveMessages = new List<byte[]> ();
 			this.messageAdapter = messageAdapter;
 			this.transmitter_Client = transmitter_Client;
-		}
+
+			runSharkHandHookLocker = new object ();
+            runSharkHandHook = false;
+            connected = false;
+
+        }
 
 		/// <summary>
 		/// Coroutine需要有代理人代為觸發
@@ -85,7 +97,8 @@ namespace Transmitter.Net
 				IAsyncResult = tcpClient.BeginConnect (serverIP, port, (ar) => {
 					if (tcpClient.Connected) 
 					{
-						SharkHand();
+						Thread thread = new Thread(SharkHand);
+						thread.Start();
 						receiveThread = new Thread (RecieveServerMessage);
 						receiveThread.Start ();
 					}
@@ -183,25 +196,39 @@ namespace Transmitter.Net
 
 		Coroutine sharkHandCoroutine;
 
-		public void SharkHand()
+		public void Update()
 		{
-			sharkHandCoroutine = transmitter_Client.StartCoroutine (SharkHandIEnumerator ());
+			if (!connected) 
+			{
+                lock (runSharkHandHookLocker) 
+				{
+					if (runSharkHandHook) 
+					{
+						sharkHandCoroutine = transmitter_Client.StartCoroutine (SharkHandIEnumerator ());
+                        runSharkHandHook = false;
+                        connected = true;
+					}
+				}
+			}
+		}
+
+		void SharkHand()
+		{
+			messageAdapter.BindLobbyEvent (Consts.NetworkEvents.NewUserReq, ReceiveExistMembers);
+			Debug.Log ("Bind");
+			lock (runSharkHandHookLocker) 
+			{
+				runSharkHandHook = true;
+			}
 		}
 
 		IEnumerator SharkHandIEnumerator()
 		{
-			messageAdapter.BindLobbyEvent (Consts.NetworkEvents.NewUserReq, ReceiveExistMembers);
-
 			float beginTime = Time.time;
 
 			float endTime = beginTime + waitNewUserReqTimeout;
 
-			yield return new WaitUntil (() => 
-				{
-					return (newUserReq!=null)||(Time.time > endTime);
-				});
-
-			while (newUserReq!=null) 
+			while (newUserReq==null) 
 			{
 				yield return new WaitForFixedUpdate ();
 
@@ -213,6 +240,8 @@ namespace Transmitter.Net
 				}
 			}
 
+			Debug.Log (newUserReq!=null);
+			Debug.Log ("UnBind");
 			messageAdapter.UnBindLobbyEvent (Consts.NetworkEvents.NewUserReq, ReceiveExistMembers);
 
 			NewUserRes newUserRes = new NewUserRes (){ Token = this.token };
