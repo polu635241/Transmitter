@@ -78,7 +78,7 @@ namespace Transmitter.Net
 		{
 			messageAdapter.BindLobbyEvent (Consts.NetworkEvents.AddUser, ProcessOnUserAdd);
 
-			messageAdapter.BindLobbyEvent (Consts.NetworkEvents.AddUser, ProcessOnUserRemove);
+			messageAdapter.BindLobbyEvent (Consts.NetworkEvents.RemoveUser, ProcessOnUserRemove);
 		}
 
 		event Action<UserData> onUserAdd;
