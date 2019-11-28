@@ -14,24 +14,7 @@ namespace Transmitter.Net
 	
 	public class MessageAdapter{
 
-		Thread unityThread;
-
 		MessageProcesser messageProcesser;
-
-		bool IsMainThread
-		{
-			get
-			{
-				if (unityThread != null) 
-				{
-					return unityThread.Equals (Thread.CurrentThread);
-				}
-				else
-				{
-					throw new UnityException ("尚未進行初始化");
-				}
-			}
-		}
 
 		object waitSendMessageLocker;
 
@@ -39,7 +22,37 @@ namespace Transmitter.Net
 	
 		List<Channel> channelTable = new List<Channel>();
 
-		Dictionary<string,EventNamePairDelegats> callbackTable = new Dictionary<string, EventNamePairDelegats>();
+		Dictionary<string,EventNamePairDelegats> gameCallbackTable = new Dictionary<string, EventNamePairDelegats> ();
+
+		Dictionary<ushort,List<Action<string>>> lobbyCallbackTable = new Dictionary<ushort, List<Action<string>>> ();
+
+		public void BindLobbyEvent(ushort header, Action<string> callback)
+		{
+			List<Action<string>> callbacks = null;
+
+			if (!lobbyCallbackTable.TryGetValue (header, out callbacks)) 
+			{
+				callbacks = new List<Action<string>> ();
+
+				lobbyCallbackTable.Add (header, callbacks);
+			}
+
+			callbacks.Add (callback);
+		}
+
+		public void UnBindLobbyEvent(ushort header, Action<string> callback)
+		{
+			List<Action<string>> callbacks = null;
+
+			if (lobbyCallbackTable.TryGetValue (header, out callbacks)) 
+			{
+				callbacks.Remove (callback);
+			}
+			else
+			{
+				Debug.LogError ("找不到對應的緩存");
+			}
+		}
 
 		/// <summary>
 		/// 只能在主線程呼叫Init以便記錄unity thread主線程是誰
@@ -48,8 +61,6 @@ namespace Transmitter.Net
 		{
 			waitSendMessageLocker = new object ();
 			waitSendMessages = new List<byte[]> ();
-
-			unityThread = Thread.CurrentThread;
 			messageProcesser = new MessageProcesser (this);
 		}
 
@@ -112,11 +123,11 @@ namespace Transmitter.Net
 		}
 
 		//接收處理完成的封包 並找到對應的callback進行觸發
-		public void ReceiveProcessMessage(MessageData data)
+		public void ReceiveProcessGameMessage(GameMessageData data)
 		{
 			EventNamePairDelegats eventNamePairDelegats;
 
-			if(callbackTable.TryGetValue(data.ChannelName,out eventNamePairDelegats))
+			if(gameCallbackTable.TryGetValue(data.ChannelName,out eventNamePairDelegats))
 			{
 				ChannelBindCacheData bindCacheData;
 
@@ -135,16 +146,31 @@ namespace Transmitter.Net
 			}
 		}
 
+		//接收處理完成的封包 並找到對應的callback進行觸發
+		public void ReceiveProcessLobbyMessage(LobbyMessageData data)
+		{
+			EventNamePairDelegats eventNamePairDelegats;
+
+			List<Action<string>> callbacks = null;
+
+			if (lobbyCallbackTable.TryGetValue (data.Header, out callbacks))
+			{
+				callbacks.ForEach (callback=>
+					{
+						callback.Invoke(data.Token);
+					});
+			}
+			else
+			{
+				Debug.LogError ("invoke a not exist callback lobby event -> " + data.Header);
+			}
+		}
+
 		#region Invoke by Channel
 
 		#region Generic Bind
 		public void Bind(string channelName,string eventName,Action callback)
 		{
-			if (!IsMainThread) 
-			{
-				throw new UnityEngine.UnityException ("請只在unity thread進行bind");
-			}
-
 			ChannelBindCacheData bindCacheData = GetBindCacheData (channelName, eventName);
 
 			bindCacheData.BindAction (callback);
@@ -152,11 +178,6 @@ namespace Transmitter.Net
 
 		public void Bind(string channelName,string eventName,Action<object> callback)
 		{
-			if (!IsMainThread) 
-			{
-				throw new UnityEngine.UnityException ("請只在unity thread進行bind");
-			}
-
 			ChannelBindCacheData bindCacheData = GetBindCacheData (channelName, eventName);
 
 			bindCacheData.BindAction (callback);
@@ -164,11 +185,6 @@ namespace Transmitter.Net
 
 		public void Bind(string channelName,string eventName,Action<object,object> callback)
 		{
-			if (!IsMainThread) 
-			{
-				throw new UnityEngine.UnityException ("請只在unity thread進行bind");
-			}
-
 			ChannelBindCacheData bindCacheData = GetBindCacheData (channelName, eventName);
 
 			bindCacheData.BindAction (callback);
@@ -176,11 +192,6 @@ namespace Transmitter.Net
 
 		public void Bind(string channelName,string eventName,Action<object,object,object> callback)
 		{
-			if (!IsMainThread) 
-			{
-				throw new UnityEngine.UnityException ("請只在unity thread進行bind");
-			}
-
 			ChannelBindCacheData bindCacheData = GetBindCacheData (channelName, eventName);
 
 			bindCacheData.BindAction (callback);
@@ -188,11 +199,6 @@ namespace Transmitter.Net
 
 		public void Bind(string channelName,string eventName,Action<object,object,object,object> callback)
 		{
-			if (!IsMainThread) 
-			{
-				throw new UnityEngine.UnityException ("請只在unity thread進行bind");
-			}
-
 			ChannelBindCacheData bindCacheData = GetBindCacheData (channelName, eventName);
 
 			bindCacheData.BindAction (callback);
@@ -200,11 +206,6 @@ namespace Transmitter.Net
 
 		public void Bind(string channelName,string eventName,Action<object,object,object,object,object> callback)
 		{
-			if (!IsMainThread) 
-			{
-				throw new UnityEngine.UnityException ("請只在unity thread進行bind");
-			}
-
 			ChannelBindCacheData bindCacheData = GetBindCacheData (channelName, eventName);
 
 			bindCacheData.BindAction (callback);
@@ -214,12 +215,6 @@ namespace Transmitter.Net
 		#region Generic UnBind
 		public void UnBind(string channelName,string eventName,Action callback)
 		{
-			if (!IsMainThread) 
-			{
-				throw new UnityEngine.UnityException ("請只在unity thread進行bind");
-			}
-
-
 			ChannelBindCacheData bindCacheData = GetBindCacheData (channelName, eventName);
 
 			bindCacheData.UnBindAction (callback);
@@ -227,12 +222,6 @@ namespace Transmitter.Net
 
 		public void UnBind(string channelName,string eventName,Action<object> callback)
 		{
-			if (!IsMainThread) 
-			{
-				throw new UnityEngine.UnityException ("請只在unity thread進行bind");
-			}
-
-
 			ChannelBindCacheData bindCacheData = GetBindCacheData (channelName, eventName);
 
 			bindCacheData.UnBindAction (callback);
@@ -240,12 +229,6 @@ namespace Transmitter.Net
 
 		public void UnBind(string channelName,string eventName,Action<object,object> callback)
 		{
-			if (!IsMainThread) 
-			{
-				throw new UnityEngine.UnityException ("請只在unity thread進行bind");
-			}
-
-
 			ChannelBindCacheData bindCacheData = GetBindCacheData (channelName, eventName);
 
 			bindCacheData.UnBindAction (callback);
@@ -253,12 +236,6 @@ namespace Transmitter.Net
 
 		public void UnBind(string channelName,string eventName,Action<object,object,object> callback)
 		{
-			if (!IsMainThread) 
-			{
-				throw new UnityEngine.UnityException ("請只在unity thread進行bind");
-			}
-
-
 			ChannelBindCacheData bindCacheData = GetBindCacheData (channelName, eventName);
 
 			bindCacheData.UnBindAction (callback);
@@ -266,12 +243,6 @@ namespace Transmitter.Net
 
 		public void UnBind(string channelName,string eventName,Action<object,object,object,object> callback)
 		{
-			if (!IsMainThread) 
-			{
-				throw new UnityEngine.UnityException ("請只在unity thread進行bind");
-			}
-
-
 			ChannelBindCacheData bindCacheData = GetBindCacheData (channelName, eventName);
 
 			bindCacheData.UnBindAction (callback);
@@ -279,12 +250,6 @@ namespace Transmitter.Net
 
 		public void UnBind(string channelName,string eventName,Action<object,object,object,object,object> callback)
 		{
-			if (!IsMainThread) 
-			{
-				throw new UnityEngine.UnityException ("請只在unity thread進行bind");
-			}
-
-
 			ChannelBindCacheData bindCacheData = GetBindCacheData (channelName, eventName);
 
 			bindCacheData.UnBindAction (callback);
@@ -301,10 +266,10 @@ namespace Transmitter.Net
 		{
 			EventNamePairDelegats eventNamePairDelegats;
 
-			if(!callbackTable.TryGetValue(channelName,out eventNamePairDelegats))
+			if(!gameCallbackTable.TryGetValue(channelName,out eventNamePairDelegats))
 			{
 				eventNamePairDelegats = new EventNamePairDelegats ();
-				callbackTable.Add (channelName,eventNamePairDelegats);
+				gameCallbackTable.Add (channelName,eventNamePairDelegats);
 			}
 
 			ChannelBindCacheData bindCacheData;
@@ -319,10 +284,16 @@ namespace Transmitter.Net
 			return bindCacheData;
 		}
 
-		public void Send(string channelName,string eventName,params System.Object[] objs)
+		public void SendGameMessage (string channelName, string eventName, params System.Object[] objs)
 		{
-			messageProcesser.AddSendMessage (channelName, eventName, objs);
+			messageProcesser.AddSendGameMessage (channelName, eventName, objs);
 		}
+
+		public void SendLobbyMessage (ushort header, object content)
+		{
+			messageProcesser.AddSendLobbyMessage (header, content);
+		}
+
 		#endregion
 
 		#region Factory

@@ -125,7 +125,7 @@ namespace Transmitter.Net.Model
 
 		public void Send(string eventName,params System.Object[] objs)
 		{
-			messageAdapter.Send (this.channelkey,eventName,objs);
+			messageAdapter.SendGameMessage (this.channelkey,eventName,objs);
 		}
 	}
 }

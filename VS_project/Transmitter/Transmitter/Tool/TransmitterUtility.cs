@@ -2,101 +2,66 @@
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.Runtime.Serialization.Formatters.Binary;
+using Transmitter.Tool;
+using Transmitter.DataStruct;
+using Transmitter.Plugin;
 
-namespace SampleSocket
+namespace Transmitter.Tool
 {
     public class TransmitterUtility
     {
-        public Byte[] GetToClientMsg(string channelName, string eventName, string msg)
+        public static Byte[] GetToClientMsg(ushort msgHeader, object msg)
         {
-            MsgParseData msgParseData = new MsgParseData(channelName, eventName, msg);
+            //基於跨版本的相容性 unity與vs的溝通 透過Json傳遞 client 與 client的溝通 才會完全的序列化成byte[]
+            string jsonMsg = JsonUtility.ToJson(msg);
 
-            return msgParseData.GetBuffer();
+            return GetToClientMsg(msgHeader, jsonMsg);
         }
 
-        class MsgParseData
+        public static Byte[] GetToClientMsg(ushort msgHeader, string jsonMsg)
         {
-            #region 合成公式
-            // int (頻道長度)
-            // string (頻道)
+            byte[] msg = ParseStringToBuffer(jsonMsg);
 
-            // int (事件長度)
-            // string (事件)
-
-            // int (有幾個參數)
-
-            // Loop :
-            // 參數型態
-            // 參數長度
-            // 參數
-            #endregion
-
-            string channelName;
-            string eventName;
-            string msg = "";
-
-            public MsgParseData(string channelName, string eventName, string msg)
-            {
-                this.channelName = channelName;
-                this.eventName = eventName;
-                this.msg = msg;
-            }
-
-            public byte[] GetBuffer()
-            {
-                byte[] buffer = null;
-                MemoryStream memoryStream = null;
-                BinaryWriter binaryWriter = null;
-
-                try
-                {
-                    memoryStream = new MemoryStream();
-                    binaryWriter = new BinaryWriter(memoryStream);
-
-                    //寫入頻道名稱
-                    byte[] channelbytes = Encoding.UTF8.GetBytes(channelName);
-                    binaryWriter.Write((ushort)channelbytes.Length);
-                    binaryWriter.Write(channelbytes);
-
-                    //寫入事件名稱
-                    byte[] eventbytes = Encoding.UTF8.GetBytes(eventName);
-                    binaryWriter.Write((ushort)eventbytes.Length);
-                    binaryWriter.Write(eventbytes);
-
-                    //寫入傳遞給client的事件
-                    binaryWriter.Write((ushort)1);
-                    string fullName = typeof(string).FullName;
-                    binaryWriter.Write(fullName);
-                    byte[] objBuffer = ParseStringToBytes(msg);
-                    binaryWriter.Write((ushort)objBuffer.Length);
-                    binaryWriter.Write(objBuffer);
-
-                    binaryWriter.Flush();
-                    buffer = memoryStream.ToArray();
-
-                }
-                catch (Exception e)
-                {
-                    Console.WriteLine(e.Message);
-                }
-                finally
-                {
-                    memoryStream?.Dispose();
-                    binaryWriter?.Dispose();
-                }
-                return buffer;
-            }
-            Byte[] ParseStringToBytes(string msg)
-            {
-                MemoryStream memoryStream = new MemoryStream();
-                BinaryWriter binaryWriter = new BinaryWriter(memoryStream);
-                binaryWriter.Write(msg);
-                return memoryStream.GetBuffer();
-            }
+            return GetToClientMsg(msgHeader, msg);
         }
 
+        public static Byte[] GetToClientMsg(ushort msgHeader, byte[] msg)
+        {
+            byte[] msgHeaderBuffer = BitConverter.GetBytes(msgHeader);
+
+            ushort msgLength = (ushort)msg.Length;
+            byte[] msgLengthBuffer = BitConverter.GetBytes(msgLength);
+
+
+            byte[] fullMsg = Tool.Combine(msgHeaderBuffer, msgLengthBuffer, msg);
+
+            return fullMsg;
+        }
+
+        /// <summary>
+        /// 封裝用　後續如果需要修改編碼方式　直接更改封裝方法就好
+        /// </summary>
+        /// <param name="msg"></param>
+        /// <returns></returns>
+        public static byte[] ParseStringToBuffer(string msg)
+        {
+            MemoryStream memoryStream = new MemoryStream();
+            BinaryWriter binaryWriter = new BinaryWriter(memoryStream);
+            binaryWriter.Write(msg);
+
+            return memoryStream.GetBuffer();
+        }
+
+        public static string ParseBufferToString(byte[] msg)
+        {
+            MemoryStream memoryStream = new MemoryStream(msg);
+            BinaryReader binaryReader = new BinaryReader(memoryStream);
+
+            return binaryReader.ReadString();
+        }
     }
 }

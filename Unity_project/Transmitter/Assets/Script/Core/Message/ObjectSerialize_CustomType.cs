@@ -1,7 +1,7 @@
 using System;
 using System.IO;
 using System.Collections.Generic;
-using Transmitter.Serialize.Tool;
+using Transmitter.Serialize;
 
 //此檔案由SerializableFactory 自動生成 為配合效能最大化 請勿在意腳本封裝性
 namespace Transmitter.Serialize

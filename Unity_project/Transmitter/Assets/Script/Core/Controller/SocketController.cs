@@ -6,6 +6,9 @@ using System.Net.Sockets;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Transmitter.Model;
+using Transmitter.Net.Model;
+using Transmitter.DataStruct;
 
 namespace Transmitter.Net
 {
@@ -27,6 +30,9 @@ namespace Transmitter.Net
 		[SerializeField][ReadOnly]
 		string serverIP;
 
+		[SerializeField][ReadOnly]
+		string token;
+
 		#endregion	
 
 		#region cache
@@ -35,6 +41,8 @@ namespace Transmitter.Net
 		IAsyncResult IAsyncResult;
 
 		Thread receiveThread;
+
+		Thread sharkThread;
 		#endregion
 
 		object receiveMessageLocker;
@@ -44,29 +52,44 @@ namespace Transmitter.Net
 
 		Action recursivelyConnect = null;
 
-		/// <summary>
-		/// CallBack的用法舉例來說 等到連線成功 才切換場景之類的
-		/// </summary>
-		/// <param name="serverIP">Server I.</param>
-		/// <param name="port">Port.</param>
-		/// <param name="connectedTrigger">Connected trigger.</param>
-		/// 
-		public SocketController (string serverIP, int port,
-			Action onConnectionCallback)
+		MessageAdapter messageAdapter;
+		Transmitter_Client transmitter_Client;
+
+		//由於coroutine只能在主線程跑 所以透過hook通知
+		bool runSharkHandHook;
+
+		bool connected;
+
+		object runSharkHandHookLocker;
+
+		public SocketController (MessageAdapter messageAdapter, Transmitter_Client transmitter_Client)
 		{
 			receiveMessageLocker = new object ();
 			receiveMessages = new List<byte[]> ();
+			this.messageAdapter = messageAdapter;
+			this.transmitter_Client = transmitter_Client;
 
+			runSharkHandHookLocker = new object ();
+            runSharkHandHook = false;
+            connected = false;
+
+        }
+
+		/// <summary>
+		/// Coroutine需要有代理人代為觸發
+		/// </summary>
+		/// <param name="serverIP">Server I.</param>
+		/// <param name="port">Port.</param>
+		/// <param name="token">Token.</param>
+		/// <param name="proxy">Proxy.</param>
+		public void ConnectionToServer (string serverIP, int port, string token)
+		{
 			this.port = port;
 			this.serverIP = serverIP;
+			this.token = token;
 
 			Debug.Log($"開始嘗試連線 ip -> {serverIP}, port -> {port}");
-
-			ConnectionToServer (serverIP, port, onConnectionCallback);
-		}
-
-		void ConnectionToServer (string serverIP,int port, Action onConnectionCallback)
-		{
+			
 			tcpClient = new TcpClient ();
 
 			recursivelyConnect = () => 
@@ -74,9 +97,10 @@ namespace Transmitter.Net
 				IAsyncResult = tcpClient.BeginConnect (serverIP, port, (ar) => {
 					if (tcpClient.Connected) 
 					{
+						Thread thread = new Thread(SharkHand);
+						thread.Start();
 						receiveThread = new Thread (RecieveServerMessage);
 						receiveThread.Start ();
-						onConnectionCallback?.Invoke ();
 					}
 					else 
 					{
@@ -163,6 +187,77 @@ namespace Transmitter.Net
 			tcpClient.Close ();
 			tcpClient.Dispose ();
 			receiveThread?.Abort ();
+
+			if (sharkHandCoroutine != null) 
+			{
+				transmitter_Client.StopCoroutine (sharkHandCoroutine);
+			}
+		}
+
+		Coroutine sharkHandCoroutine;
+
+		public void Update()
+		{
+			if (!connected) 
+			{
+                lock (runSharkHandHookLocker) 
+				{
+					if (runSharkHandHook) 
+					{
+						sharkHandCoroutine = transmitter_Client.StartCoroutine (SharkHandIEnumerator ());
+                        runSharkHandHook = false;
+                        connected = true;
+					}
+				}
+			}
+		}
+
+		void SharkHand()
+		{
+			messageAdapter.BindLobbyEvent (Consts.NetworkEvents.NewUserReq, ReceiveExistMembers);
+			Debug.Log ("Bind");
+			lock (runSharkHandHookLocker) 
+			{
+				runSharkHandHook = true;
+			}
+		}
+
+		IEnumerator SharkHandIEnumerator()
+		{
+			float beginTime = Time.time;
+
+			float endTime = beginTime + waitNewUserReqTimeout;
+
+			while (newUserReq==null) 
+			{
+				yield return new WaitForFixedUpdate ();
+
+				if (Time.time > endTime) 
+				{
+					messageAdapter.UnBindLobbyEvent (Consts.NetworkEvents.NewUserReq, ReceiveExistMembers);
+					Debug.LogError ("SharkHand Time out");
+					yield break;
+				}
+			}
+
+			Debug.Log (newUserReq!=null);
+			Debug.Log ("UnBind");
+			messageAdapter.UnBindLobbyEvent (Consts.NetworkEvents.NewUserReq, ReceiveExistMembers);
+
+			NewUserRes newUserRes = new NewUserRes (){ Token = this.token };
+			messageAdapter.SendLobbyMessage (Consts.NetworkEvents.NewUserRes, newUserRes);
+
+			UserData owner = UserData.Create (newUserReq.NewUserUDID, this.token);
+			transmitter_Client.LobbyController.OnJoinLobby (newUserReq.UserDatas, owner);
+		}
+
+		const float waitNewUserReqTimeout = 5;
+
+		NewUserReq newUserReq = null;
+
+		void ReceiveExistMembers(string msg)
+		{
+			newUserReq = JsonUtility.FromJson<NewUserReq> (msg);
 		}
 
 		#endregion

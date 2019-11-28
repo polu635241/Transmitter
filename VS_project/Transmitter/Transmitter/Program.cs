@@ -3,6 +3,9 @@ using System.Net;
 using System.Threading;
 using System.Net.Sockets;
 using System.Collections.Generic;
+using Transmitter.Tool;
+using Transmitter.Model;
+using Transmitter.Plugin;
 using Transmitter.Manager;
 
 namespace Transmitter

@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.Runtime.Serialization.Formatters.Binary;
 using UnityEngine;
 
-namespace Transmitter.Serialize.Tool
+namespace Transmitter.Serialize
 {
 	public class MessageUtility {
 

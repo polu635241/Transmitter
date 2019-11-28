@@ -6,7 +6,9 @@ using System.Net.Sockets;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Transmitter.Model;
 using Transmitter.Net.Model;
+using Transmitter.DataStruct;
 
 namespace Transmitter.Net
 {
@@ -32,50 +34,52 @@ namespace Transmitter.Net
 			}
 		}
 
+		public LobbyController LobbyController
+		{
+			get
+			{
+				return lobbyController;
+			}
+		}
+
+		LobbyController lobbyController;
+
 		[SerializeField][ReadOnly]
 		string serverIP;
 		int port;
-
-		Channel playerStatusChannel = null;
+		string token;
 
 		public void Init()
 		{
 			messageAdapter = new MessageAdapter ();
-			playerStatusChannel = messageAdapter.BindChannel ($"{Presesrve_Start_Word}PlayerStatus");
+			socketController = new SocketController (messageAdapter, this);
+			lobbyController = new LobbyController (messageAdapter);
 		}
 
 		/// <summary>
 		/// 只能在主線程呼叫Init以便記錄unity thread主線程是誰
-		/// CallBack的用法舉例來說 等到連線成功 才切換場景之類的
 		/// </summary>
-		public void Connect (string serverIP,int port,Action onConnectionCallback) 
+		public void Connect (string serverIP, int port, string token)
 		{
 			//just cache
 			this.serverIP = serverIP;
 			this.port = port;
+			this.token = token;
 			
 			DontDestroyOnLoad (this.gameObject);
-			socketController = new SocketController (serverIP, port,onConnectionCallback);
+			socketController.ConnectionToServer (serverIP, port, token);
 		}
-
-		const string Presesrve_Start_Word = "Presesrve-";
 
 		public Channel BindChinnel(string channelNamel)
 		{
-			if (!channelNamel.StartsWith (Presesrve_Start_Word)) 
-			{
-				return messageAdapter.BindChannel (channelNamel);
-			}
-			else
-			{
-				throw new UnityException ($"{Presesrve_Start_Word} 開頭的頻道 是系統保留頻道 請勿使用");
-			}
-
+			return messageAdapter.BindChannel (channelNamel);
 		}
 
 		// Update is called once per frame
 		void Update () 
 		{
+			socketController?.Update ();
+			
 			List<byte[]> newReceiveMessages = socketController?.PopAllReceiveMessages ();
 
 			newReceiveMessages?.ForEach (message => messageAdapter.ReceiveMessage (message));

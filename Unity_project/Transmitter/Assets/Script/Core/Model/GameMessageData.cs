@@ -8,11 +8,12 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.Serialization.Formatters.Binary;
 using UnityEngine;
+using Transmitter.DataStruct;
 
 namespace Transmitter.Net.Model
 {
 	[Serializable]
-	public class MessageData
+	public class GameMessageData
 	{
 		string channelName;
 
@@ -45,10 +46,8 @@ namespace Transmitter.Net.Model
 		}
 
 		#region 合成公式
-		// int (頻道長度)
 		// string (頻道)
 
-		// int (事件長度)
 		// string (事件)
 
 		// int (有幾個參數)
@@ -62,10 +61,10 @@ namespace Transmitter.Net.Model
 		/// <summary>
 		/// 透過實體物件建構
 		/// </summary>
-		public static MessageData CreateByDefaultFormat(string channelName,string eventName,params object[] objs)
+		public static GameMessageData Create(string channelName,string eventName,params object[] objs)
 		{
-			MessageData messageData = new MessageData ();
 			
+			GameMessageData messageData = new GameMessageData ();
 			messageData.channelName = channelName;
 			messageData.eventName = eventName;
 			messageData.objs = objs;
@@ -73,12 +72,48 @@ namespace Transmitter.Net.Model
 			return messageData;
 		}
 
+		public byte[] GetBuffer(Func<string,object,byte[]> serializeObjToBuffer)
+		{
+			byte[] buffer = null;
+			MemoryStream memoryStream = null;
+			BinaryWriter binaryWriter = null;
+
+			try
+			{
+				memoryStream = new MemoryStream();
+				binaryWriter = new BinaryWriter(memoryStream);
+
+				ushort gameMsgHeader = Consts.NetworkEvents.GameMessage;
+				binaryWriter.Write(gameMsgHeader);
+
+				byte[] contentBuffer = GetContentBuffer(serializeObjToBuffer);
+				ushort contentBufferLength = (ushort)contentBuffer.Length;
+
+				binaryWriter.Write(contentBufferLength);
+				binaryWriter.Write(contentBuffer);
+
+				binaryWriter.Flush();
+				buffer = memoryStream.ToArray();
+
+			}
+			catch (Exception e) 
+			{
+				Debug.LogError (e.Message);
+			}
+			finally
+			{
+				memoryStream?.Dispose ();
+				binaryWriter?.Dispose ();
+			}
+			return buffer;
+		}
+
 		/// <summary>
 		/// 內部作為格式化之用 由外部傳入將單一object轉換成byte[]方法
 		/// </summary>
 		/// <returns>The buffer.</returns>
 		/// <param name="serializeObjToBuffer">Serialize object to buffer.</param>
-		public byte[] GetBuffer(Func<string,object,byte[]> serializeObjToBuffer)
+		byte[] GetContentBuffer(Func<string,object,byte[]> serializeObjToBuffer)
 		{
 			byte[] buffer = null;
 			MemoryStream memoryStream = null;
@@ -134,9 +169,9 @@ namespace Transmitter.Net.Model
 		/// 透過封包建構 外部傳入將單一段byte[]轉換成object的方法 作為格式化的依據
 		/// </summary>
 		/// <param name="byteData">Byte data.</param>
-		public static MessageData CreateByMsg(Func<string,byte[],object> deserializeToObject ,byte[] byteData)
+		public static GameMessageData CreateByMsg(Func<string,byte[],object> deserializeToObject ,byte[] byteData)
 		{
-			MessageData messageData = new MessageData ();
+			GameMessageData messageData = new GameMessageData ();
 			
 			MemoryStream memoryStream = null;
 			BinaryReader binaryReader = null;

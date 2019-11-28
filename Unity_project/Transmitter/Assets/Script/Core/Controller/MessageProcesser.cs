@@ -10,6 +10,7 @@ using System.Runtime.Serialization.Formatters.Binary;
 using UnityEngine;
 using Transmitter.Serialize;
 using Transmitter.Net.Model;
+using Transmitter.DataStruct;
 
 namespace Transmitter.Net
 {
@@ -38,11 +39,22 @@ namespace Transmitter.Net
 		object waitReceiveLocker;
 		List<byte[]> waitReceivePool = new List<byte[]>();
 
-		object parseDatasLocker;
-		List<MessageData> parseDatas = new List<MessageData>();
+		#region Game
+		object waitInvokeGameMessagesLocker;
+		List<GameMessageData> receiveGameMessageDatas = new List<GameMessageData>();
 
-		object waitSendLocker;
-		List<MessageData> waitSendPool = new List<MessageData> ();
+		object waitSendGameMessageLocker;
+		List<GameMessageData> waitSendGameMessageDatas = new List<GameMessageData> ();
+		#endregion
+
+		#region Lobby
+		object waitInvokeLobbyMessagesLocker;
+		List<LobbyMessageData> receiveLobbyMessageDatas = new List<LobbyMessageData>();
+
+		object waitSendLobbyMessageLocker;
+		List<LobbyMessageData> waitSendLobbyMessageDatas = new List<LobbyMessageData> ();
+		#endregion
+
 		Thread processSendMessageThread;
 
 		MessageAdapter messageAdapter;
@@ -52,8 +64,11 @@ namespace Transmitter.Net
 		public MessageProcesser(MessageAdapter messageRouter)
 		{
 			waitReceiveLocker = new object ();
-			parseDatasLocker = new object ();
-			waitSendLocker = new object ();
+			waitInvokeGameMessagesLocker = new object ();
+			waitSendGameMessageLocker = new object ();
+
+			waitInvokeLobbyMessagesLocker = new object ();
+			waitSendLobbyMessageLocker = new object ();
 
 			deserializeProcess = new ObjectDeserialize_CustomType();
 			deserializeProcess.Init ();
@@ -68,34 +83,42 @@ namespace Transmitter.Net
 
 			processSendMessageThread = new Thread (ProcessSendMessage);
 			processSendMessageThread.Start ();
-
 		}
 
 		//call in main thread
 		public void Update()
 		{
-			List<MessageData> cacheDatas = new List<MessageData> ();
+			#region Game
+			List<GameMessageData> gameMessageDatas = new List<GameMessageData> ();
 			
-			lock(parseDatasLocker)
+			lock(waitInvokeGameMessagesLocker)
 			{
-				try
-				{
-					if(parseDatas.Count>0)
-					{
-						cacheDatas = new List<MessageData>(parseDatas);
-						parseDatas.Clear();
-					}
-				}
-				catch (Exception e)
-				{
-					Debug.LogError(e.Message);
-				}
+				gameMessageDatas = new List<GameMessageData>(receiveGameMessageDatas);
+				receiveGameMessageDatas.Clear();
 			}
 
-			cacheDatas.ForEach (data=>
+			gameMessageDatas.ForEach (data=>
 				{
-					messageAdapter.ReceiveProcessMessage(data);
+					messageAdapter.ReceiveProcessGameMessage(data);
 				});
+			#endregion
+
+			#region Lobby
+
+			List<LobbyMessageData> lobbyMessageDatas = new List<LobbyMessageData>();
+
+			lock(waitInvokeLobbyMessagesLocker)
+			{
+				lobbyMessageDatas = new List<LobbyMessageData>(receiveLobbyMessageDatas);
+				receiveLobbyMessageDatas.Clear();
+			}
+
+			lobbyMessageDatas.ForEach(data=>
+				{
+					messageAdapter.ReceiveProcessLobbyMessage(data);
+				});
+
+			#endregion
 		}
 			
 		//call in sub thread
@@ -134,17 +157,28 @@ namespace Transmitter.Net
 						{
 							try
 							{
-								MessageData parseData = MessageData.CreateByMsg(this.DeserializeProcess.DeserializeToObject ,byteData);
+								MemoryStream memoryStream = new MemoryStream(byteData);
+								BinaryReader binaryReader = new BinaryReader(memoryStream);
+								ushort header = binaryReader.ReadUInt16();
+								int contentBufferLength = (int)binaryReader.ReadUInt16();
+								byte[] contentBuffer = binaryReader.ReadBytes(contentBufferLength);
 
-								lock(parseDatasLocker)
+								if(header == Consts.NetworkEvents.GameMessage)
 								{
-									try
+									GameMessageData messageData = GameMessageData.CreateByMsg(this.DeserializeProcess.DeserializeToObject, contentBuffer);
+
+									lock(waitInvokeGameMessagesLocker)
 									{
-										parseDatas.Add(parseData);
+										receiveGameMessageDatas.Add(messageData);
 									}
-									catch (Exception e)
+								}
+								else
+								{
+									LobbyMessageData messageData = LobbyMessageData.CreateByMsg(header, contentBuffer);
+
+									lock(waitInvokeLobbyMessagesLocker)
 									{
-										Debug.LogError(e.Message);
+										receiveLobbyMessageDatas.Add(messageData);
 									}
 								}
 
@@ -162,24 +196,31 @@ namespace Transmitter.Net
 		{
 			while(true)
 			{
-				List<MessageData> waitSendCaches = null;
+				List<GameMessageData> _waitSendGameMessageDatas = null;
+				List<LobbyMessageData> _waitSendLobbyMessageData = null;
 
-				lock(waitSendLocker)
+				lock(waitSendGameMessageLocker)
 				{
-					waitSendCaches = new List<MessageData> (waitSendPool);
-					waitSendPool.Clear ();
+					_waitSendGameMessageDatas = new List<GameMessageData> (waitSendGameMessageDatas);
+					waitSendGameMessageDatas.Clear ();
 				}
 
-				if (waitSendCaches.Count==0) 
+				lock(waitSendLobbyMessageLocker)
+				{
+					_waitSendLobbyMessageData = new List<LobbyMessageData> (waitSendLobbyMessageDatas);
+					waitSendLobbyMessageDatas.Clear ();
+				}
+
+				if (_waitSendGameMessageDatas.Count == 0 && _waitSendLobbyMessageData.Count == 0)
 				{
 					//只是一個離開的依據 並不是進入的條件 所以上方還要再lock一次
 					SpinWait.SpinUntil (() => {
-						return waitSendPool.Count > 0;
+						return waitSendGameMessageDatas.Count > 0|| waitSendLobbyMessageDatas.Count > 0;
 					});
 				}
 				else
 				{
-					waitSendCaches.ForEach (cache => {
+					_waitSendGameMessageDatas.ForEach (cache => {
 						try 
 						{
 							byte[] message = cache.GetBuffer(this.serializeProcess.SerializeToBuffer);
@@ -188,6 +229,18 @@ namespace Transmitter.Net
 						catch (Exception e) 
 						{
 							Debug.LogError (e.Message);
+						}
+					});
+
+					_waitSendLobbyMessageData.ForEach (cache=>{
+						try
+						{
+							byte[] message = cache.GetBuffer();
+							messageAdapter.AddProcessedSendMessage(message);
+						}
+						catch(Exception e)
+						{
+							Debug.Log(e.Message);
 						}
 					});
 				}
@@ -203,15 +256,26 @@ namespace Transmitter.Net
 			}
 		}
 
-		public void AddSendMessage (string channelName, string eventName, System.Object[] objs)
+		public void AddSendGameMessage (string channelName, string eventName, System.Object[] objs)
 		{
-			MessageData data = MessageData.CreateByDefaultFormat (channelName, eventName, objs);
+			GameMessageData data = GameMessageData.Create (channelName, eventName, objs);
 
-			lock(waitSendLocker)
+			lock(waitSendGameMessageLocker)
 			{
-				waitSendPool.Add (data);
+				waitSendGameMessageDatas.Add (data);
 			}
 		}
+
+		public void AddSendLobbyMessage (ushort header, object content)
+		{
+			LobbyMessageData data = LobbyMessageData.Create (header, content);
+
+			lock(waitSendLobbyMessageLocker)
+			{
+				waitSendLobbyMessageDatas.Add (data);
+			}
+		}
+
 		#endregion
 
 		public void Close()

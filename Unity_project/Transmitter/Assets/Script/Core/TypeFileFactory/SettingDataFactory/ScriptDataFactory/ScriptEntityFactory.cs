@@ -186,7 +186,7 @@ namespace Transmitter
 			"System",
 			"System.IO",
 			"System.Collections.Generic",
-			"Transmitter.Serialize.Tool"
+			"Transmitter.Serialize"
 		};
 
 		const string belongSpace = "Transmitter.Serialize";
