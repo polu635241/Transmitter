@@ -31,13 +31,6 @@ namespace Transmitter.Demo
 					EditorGUILayout.LabelField("msg : ",textMsg,GUILayout.Width(35));
 					textMsg = GUILayout.TextArea (textMsg);
 				});
-
-			GUILayout.Space (10);
-
-			if (GUILayout.Button ("GetDescription",GUILayout.Width(100),GUILayout.Height(30)))
-			{
-				runtimeScript.GetDescription ();
-			}
 		}
 
 	}
