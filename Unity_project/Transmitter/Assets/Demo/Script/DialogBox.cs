@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System;
+using System.Text;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -37,6 +38,13 @@ namespace Transmitter.Demo
 
 		const float SettingWriteSpeed = 1;
 
+		const float ChineseWordValue = 4f;
+
+		/// <summary>
+		/// 該字體 英文跟數字等寬 所以判斷中文就好 
+		/// </summary>
+		const float EnglisgAndNumberWordValue = 2.273f;
+
 		float GetWriteSpeed
 		{
 			get
@@ -57,22 +65,30 @@ namespace Transmitter.Demo
 		// Use this for initialization
 		void Awake () 
 		{
-			text = this.GetComponent<Text> ();
 			InitPars ();
 		}
 
 		void InitPars()
 		{
+			text = this.GetComponent<Text> ();
+			text.text = "";
 			inOutput = false;
 			currentWordIndex = 0;
 			currentLineIndex = 0;
 			waitOutputLines = new List<string>();
 		}
 
+		void InternalInput(List<string> messages)
+		{
+			waitOutputLines.AddRange (messages);
+			CheckWakeProcess ();
+		}
+
 		public void Input(string message)
 		{
-			waitOutputLines.Add (message);
-			CheckWakeProcess ();
+			List<string> lines = ProcessToMultiLinse (message);
+			
+			InternalInput (lines);
 		}
 
 		/// <summary>
@@ -177,6 +193,85 @@ namespace Transmitter.Demo
 			char[] allWords = currentOutputLine.ToCharArray ();
 
 			return  allWords [currentWordIndex].ToString ();
+		}
+
+		public void GetDescription()
+		{
+			string[] linesArray = this.GetComponent<Text> ().text.Split ("\r\n".ToCharArray ());
+			List<string> lines = new List<string> (linesArray);
+
+			lines.ForEach (line=>
+				{
+					print(line.Length);
+					print(line);
+				});
+		}
+
+		// <summary>
+		// 判斷會不會超過text的畫面自動切成多行
+		// </summary>
+		// <returns>The to multi linse.</returns>
+		List<string> ProcessToMultiLinse(string msg)
+		{
+			List<string> lines = new List<string> ();
+
+			//超過100就該換行了
+			float currentLineValue = 0;
+
+			StringBuilder stringBuilder = new StringBuilder ();
+
+			Array.ForEach (msg.ToCharArray(),(c)=>
+				{
+					float wordValue = GetWordValue(c);
+
+					currentLineValue+=wordValue;
+
+					if(currentLineValue > 100)
+					{
+						lines.Add(stringBuilder.ToString());
+						//把上一行完結 這個字元作為下一行的開頭
+						stringBuilder = new StringBuilder(c);
+						currentLineValue = wordValue;
+					}
+					else
+					{
+						stringBuilder.Append(c);
+					}
+				});
+
+			//把剩餘的字數 作為最後一行
+			if (stringBuilder.Length > 0) 
+			{
+				lines.Add (stringBuilder.ToString ());
+			}
+
+			return lines;
+		}
+
+		float GetWordValue(Char c)
+		{
+			bool isChinese = CheckIsChinese (c);
+
+			if (isChinese) 
+			{
+				return ChineseWordValue;
+			}
+			else
+			{
+				return EnglisgAndNumberWordValue;
+			}
+		}
+
+		bool CheckIsChinese(char c)
+		{
+			if (c >= 0X4e00 && c < 0X9fbb) 
+			{
+				return true;
+			}
+			else
+			{
+				return false;
+			}
 		}
 	}	
 }
