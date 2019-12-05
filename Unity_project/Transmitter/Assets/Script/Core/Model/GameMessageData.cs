@@ -10,7 +10,7 @@ using System.Runtime.Serialization.Formatters.Binary;
 using UnityEngine;
 using Transmitter.DataStruct;
 
-namespace Transmitter.Net.Model
+namespace Transmitter.Model
 {
 	[Serializable]
 	public class GameMessageData

@@ -7,7 +7,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace Transmitter.Net.Model
+namespace Transmitter.Model
 {
 	public class ChannelBindCacheData
 	{
