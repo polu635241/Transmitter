@@ -148,9 +148,20 @@ namespace Transmitter.Tool
 
 			EditorTool.DrawInHorizontal (()=>
 				{
-					EditorGUILayout.LabelField ("", GUILayout.Width (keyWidth));
+					newRefGatherKey = EditorGUILayout.DelayedTextField (newRefGatherKey, GUILayout.Width (keyWidth));
 
-					newRefGatherGo = EditorGUILayout.ObjectField (newRefGatherGo, typeof(GameObject), true, GUILayout.Width (gameObjectWidth));
+					UnityEngine.Object newGO = EditorGUILayout.ObjectField (newRefGatherGo, typeof(GameObject), true, GUILayout.Width (gameObjectWidth));
+
+					//做修改的當下
+					if(newGO!=newRefGatherGo)
+					{
+						//如果舊的key與舊的物件的名稱不一樣 代表這個key被使用者修改過 所以要保留
+						if((newRefGatherGo==null)||(newRefGatherKey==newRefGatherGo.name))
+						{
+							newRefGatherKey = newGO.name;
+						}
+						newRefGatherGo = newGO;
+					}
 
 
 					if (GUILayout.Button ("Add New Ref", buttonGUIStyle, GUILayout.MaxWidth (buttonWidth)))
@@ -159,7 +170,7 @@ namespace Transmitter.Tool
 						{
 							int originSize = refGathersProperty.arraySize;
 
-							string newItemkey = newRefGatherGo.name;
+							string newItemkey = newRefGatherKey;
 
 							for (int i = 0; i < originSize; i++) 
 							{
@@ -182,6 +193,7 @@ namespace Transmitter.Tool
 							newItem.FindPropertyRelative (refGatherGOFieldName).objectReferenceValue = newRefGatherGo;
 
 							newRefGatherGo = null;
+							newRefGatherKey = "";
 						}
 						else
 						{
@@ -189,10 +201,11 @@ namespace Transmitter.Tool
 						}
 
 					}
-				});
+				},EditorTool.GUILayout.boxStyle);
 
 		}
 
 		UnityEngine.Object newRefGatherGo = null;
+		string newRefGatherKey;
 	}
 }
