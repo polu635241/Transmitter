@@ -200,8 +200,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   refGathers:
-  - key: Text
+  - key: PlayerNameText
     go: {fileID: 1809187120437296}
+  - key: CommentText
+    go: {fileID: 1232018880055344}
 --- !u!114 &114771417427874964
 MonoBehaviour:
   m_ObjectHideFlags: 1

@@ -289,7 +289,7 @@ MonoBehaviour:
   refGathers:
   - key: PlayerNameText
     go: {fileID: 1083723999835748}
-  - key: Text (1)
+  - key: CommentText
     go: {fileID: 1832213003047652}
 --- !u!222 &222112578587035996
 CanvasRenderer:
