@@ -11,10 +11,25 @@ namespace Transmitter.Demo
 {
 	public class PlayerField
 	{
+		[SerializeField][ReadOnly]
 		GameObject ownerGoRoot;
 
+		[SerializeField][ReadOnly]
 		Text playerNameText;
+
+		[SerializeField][ReadOnly]
 		Text commentText;
+
+		[SerializeField][ReadOnly]
+		ushort udid;
+
+		public ushort UDID
+		{
+			get
+			{
+				return udid;
+			}
+		}
 
 		void SetUpRef(GameObject ownerGoRoot)
 		{
@@ -22,11 +37,11 @@ namespace Transmitter.Demo
 
 			RefBinder refBinder = ownerGoRoot.GetComponent<RefBinder> ();
 
-			playerNameText = refBinder.GetChildComponent<Text> (DemoConsts.AssetKeys.PlayerNameText);
-			commentText = refBinder.GetChildComponent<Text> (DemoConsts.AssetKeys.CommentText);
+			playerNameText = refBinder.GetComponent<Text> (DemoConsts.AssetKeys.PlayerNameText);
+			commentText = refBinder.GetComponent<Text> (DemoConsts.AssetKeys.CommentText);
 		}
 
-		public void SetPlayerName(string playerName)
+		public void SetPlayerName (string playerName)
 		{
 			playerNameText.text = playerName;
 		}
@@ -38,17 +53,28 @@ namespace Transmitter.Demo
 		/// 內容一樣 底板樣式與說明不一樣
 		/// </summary>
 		/// <param name="style">Style.</param>
-		public static PlayerField Create(PlayerFieldStyle style)
+		public static PlayerField Create(string playerName, ushort udid, PlayerFieldStyle style, Transform root)
 		{
 			PlayerField playerField = new PlayerField ();
-			playerField.InstantiateEntity (style);
+			playerField.InstantiateEntity (style, root);
+			playerField.playerNameText.text = playerName;
+			playerField.udid = udid;
 			return playerField;
 		}
 
-		void InstantiateEntity(PlayerFieldStyle style)
+		void InstantiateEntity (PlayerFieldStyle style, Transform root)
 		{
 			string resourceName = GetResourcesName (style);
 			GameObject prefab = Resources.Load<GameObject> (resourceName);
+			GameObject entity = MonoBehaviour.Instantiate<GameObject> (prefab, root);
+
+			//Other靠layout排序
+			if (style == PlayerFieldStyle.Owner) 
+			{
+				RectTransform entityRectTransform = entity.GetComponent<RectTransform> ();
+				entityRectTransform.anchoredPosition = Vector2.zero;
+			}
+
 			this.SetUpRef (prefab);
 			this.commentText.text = GetComment (style);
 		}
