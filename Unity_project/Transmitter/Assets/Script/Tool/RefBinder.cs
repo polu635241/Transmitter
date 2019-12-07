@@ -35,6 +35,12 @@ namespace Transmitter.Tool
 
 			return findTarget;
 		}
+
+		public T GetChildComponent<T> (string queyKey, bool throwException = true) where T:Component
+		{
+			GameObject childGO = GetGameobject (queyKey);
+			return childGO.GetComponent<T> ();
+		}
 	}
 
 	[Serializable]
