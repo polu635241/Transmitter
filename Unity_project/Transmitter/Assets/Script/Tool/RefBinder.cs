@@ -19,13 +19,13 @@ namespace Transmitter.Tool
 
 			if (finder == null&&throwException) 
 			{
-				throw new Exception ("綁定不存在 可是綁定內容為空");
+				throw new Exception ($"綁定不存在 -> {queyKey}");
 			}
 			else
 			{
 				if (finder.go == null&&throwException)
 				{
-					throw new Exception ("綁定存在 可是綁定內容為空");
+					throw new Exception ($"綁定存在 可是綁定內容為空 -> {queyKey}");
 				}
 				else
 				{
@@ -36,7 +36,7 @@ namespace Transmitter.Tool
 			return findTarget;
 		}
 
-		public T GetChildComponent<T> (string queyKey, bool throwException = true) where T:Component
+		public T GetComponent<T> (string queyKey, bool throwException = true) where T:Component
 		{
 			GameObject childGO = GetGameobject (queyKey);
 			return childGO.GetComponent<T> ();

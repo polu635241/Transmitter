@@ -215,7 +215,6 @@ namespace Transmitter.Net
 		void SharkHand()
 		{
 			messageAdapter.BindLobbyEvent (Consts.NetworkEvents.NewUserReq, ReceiveExistMembers);
-			Debug.Log ("Bind");
 			lock (runSharkHandHookLocker) 
 			{
 				runSharkHandHook = true;
@@ -239,9 +238,6 @@ namespace Transmitter.Net
 					yield break;
 				}
 			}
-
-			Debug.Log (newUserReq!=null);
-			Debug.Log ("UnBind");
 			messageAdapter.UnBindLobbyEvent (Consts.NetworkEvents.NewUserReq, ReceiveExistMembers);
 
 			NewUserRes newUserRes = new NewUserRes (){ Token = this.token };
