@@ -1,12 +1,9 @@
 ﻿using System;
 using System.IO;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
-using System.Threading.Tasks;
 using Transmitter.Tool;
 using Transmitter.Model;
 using Transmitter.Plugin;
@@ -101,9 +98,9 @@ namespace Transmitter.Manager
                         }
                     }
                 }
-                catch (Exception ex)
+                catch (Exception e)
                 {
-                    CursorModule.Instance.WriteLine(ex.Message);
+                    CursorModule.Instance.WriteLine(Tool.Tool.GetFullMessage(e));
 
                     RemoveClientSocket(m_ClientSocket);
                     break;
@@ -203,7 +200,7 @@ namespace Transmitter.Manager
             }
             catch (Exception e)
             {
-                CursorModule.Instance.WriteLine(e.Message);
+                CursorModule.Instance.WriteLine(Tool.Tool.GetFullMessage(e));
             }
             finally 
             {
@@ -366,7 +363,7 @@ namespace Transmitter.Manager
             }
             catch (Exception e)
             {
-                CursorModule.Instance.WriteLine(e.Message);
+                CursorModule.Instance.WriteLine(Tool.Tool.GetFullMessage(e));
             }
         }
     }

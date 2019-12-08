@@ -9,6 +9,17 @@ namespace Transmitter.Tool
 {
     public static class Tool
     {
+        public static string GetFullMessage(this Exception e)
+		{
+			System.Diagnostics.StackTrace trace = new System.Diagnostics.StackTrace (e, true);
+
+            string message = e.Message;
+            string fileName = trace.GetFrame(0).GetFileName();
+            int lineNumber = trace.GetFrame(0).GetFileLineNumber();
+
+            return string.Format($"{message} # file -> {fileName} , line -> {lineNumber}");
+		}
+
         public static T[] Combine<T>(params T[][] arrs)
         {
             if (arrs.Length == 0)
