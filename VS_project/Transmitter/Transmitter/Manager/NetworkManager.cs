@@ -300,25 +300,31 @@ namespace Transmitter.Manager
         {
             lock (identityCheckLocker)
             {
-                clientSocket.Shutdown(SocketShutdown.Both);
-                clientSocket.Close();
-
-                Thread receiveThread = receiveMessageDict[clientSocket];
-                receiveMessageDict.Remove(clientSocket);
-                receiveThread.Abort();
-
-                clientSockets.Remove(clientSocket);
-
-                List<Socket> needSendRemoveSockets = new List<Socket>(clientSockets);
-
-                if (waitSharkHandSocket != null)
+                try
                 {
-                    needSendRemoveSockets.Add(waitSharkHandSocket);
-                }
+                    clientSocket.Shutdown(SocketShutdown.Both);
+                    clientSocket.Close();
 
-                UserData removeUserData = userDataPairSocketTable[clientSocket];
-                userDataPairSocketTable.Remove(clientSocket);
-                SendRemoveUserData(removeUserData, needSendRemoveSockets);
+                    Thread receiveThread = receiveMessageDict[clientSocket];
+                    receiveMessageDict.Remove(clientSocket);
+
+                    clientSockets.Remove(clientSocket);
+
+                    List<Socket> needSendRemoveSockets = new List<Socket>(clientSockets);
+
+                    if (waitSharkHandSocket != null)
+                    {
+                        needSendRemoveSockets.Add(waitSharkHandSocket);
+                    }
+
+                    UserData removeUserData = userDataPairSocketTable[clientSocket];
+                    userDataPairSocketTable.Remove(clientSocket);
+                    SendRemoveUserData(removeUserData, needSendRemoveSockets);
+                }
+                catch (Exception e)
+                {
+                    CursorModule.Instance.WriteLine(Tool.Tool.GetFullMessage(e));
+                }
             }
         }
 

@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
+using System.Diagnostics;
 using Transmitter.Plugin;
 
 namespace Transmitter.Tool
@@ -11,13 +11,24 @@ namespace Transmitter.Tool
     {
         public static string GetFullMessage(this Exception e)
 		{
-			System.Diagnostics.StackTrace trace = new System.Diagnostics.StackTrace (e, true);
+
+			StackTrace trace = new StackTrace (e, true);
 
             string message = e.Message;
-            string fileName = trace.GetFrame(0).GetFileName();
-            int lineNumber = trace.GetFrame(0).GetFileLineNumber();
 
-            return string.Format($"{message} # file -> {fileName} , line -> {lineNumber}");
+            StringBuilder stringBuilder = new StringBuilder(message);
+
+            StackFrame[] frames = trace.GetFrames();
+
+            for (int i = 0; i < frames.Length; i++)
+            {
+                StackFrame frame = frames[i];
+                string fileName = frame.GetFileName();
+                int lineNumber = frame.GetFileLineNumber();
+                stringBuilder.Append($"# file -> {fileName} , line -> {lineNumber}");
+            }
+
+            return stringBuilder.ToString();
 		}
 
         public static T[] Combine<T>(params T[][] arrs)
