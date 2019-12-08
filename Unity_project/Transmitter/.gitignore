@@ -15,3 +15,6 @@
  
 # need include the meta of file
 !*.*.meta
+
+# Visual Studio temp something
+.vs/
