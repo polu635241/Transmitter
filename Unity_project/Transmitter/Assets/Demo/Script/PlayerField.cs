@@ -75,7 +75,7 @@ namespace Transmitter.Demo
 				entityRectTransform.anchoredPosition = Vector2.zero;
 			}
 
-			this.SetUpRef (prefab);
+			this.SetUpRef (entity);
 			this.commentText.text = GetComment (style);
 		}
 

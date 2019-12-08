@@ -413,11 +413,11 @@ MonoBehaviour:
   - key: DialogBox
     go: {fileID: 1377345132107598}
   - key: WaitSendMsgText
-    go: {fileID: 1338311891674086}
+    go: {fileID: 1517761665275906}
   - key: WaitSendMsgBtn
     go: {fileID: 1581664659906024}
-  - key: Rename
-    go: {fileID: 1749690204136086}
+  - key: RenameInputField
+    go: {fileID: 1737939955334768}
   - key: RenameBtn
     go: {fileID: 1279792565947530}
   - key: OwnerPlayerRoot

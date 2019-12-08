@@ -14,10 +14,10 @@ namespace Transmitter.Demo
 		public static class AssetKeys
 		{
 			public const string DialogBox = "DialogBox";
-			public const string WaitSendMsgText = "WaitSendMsgText";
+			public const string WaitSendMsgInputField = "WaitSendMsgInputField";
 			public const string WaitSendMsgBtn = "WaitSendMsgBtn";
 
-			public const string RenameText = "RenameText";
+			public const string RenameInputField = "RenameInputField";
 			public const string RenameBtn = "RenameBtn";
 
 			public const string OwnerPlayerRoot = "OwnerPlayerRoot";

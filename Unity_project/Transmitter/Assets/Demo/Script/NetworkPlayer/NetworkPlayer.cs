@@ -7,6 +7,7 @@ using UnityEngine.UI;
 using Transmitter.Net;
 using Transmitter.Tool;
 using Transmitter.Model;
+using Transmitter.Demo.UI;
 
 namespace Transmitter.Demo
 {
@@ -50,7 +51,7 @@ namespace Transmitter.Demo
 
 			networkMapper = new NetworkMapper ();
 
-			uiController = new UIController ();
+			uiController = new UIController (this);
 			uiController.SetupRef (refBinder);
 		}
 
@@ -87,7 +88,7 @@ namespace Transmitter.Demo
 			public_Channel.Send (DemoConsts.Events.SendMessage, owner.Udid, message);
 		}
 
-		void SendRename(string newName)
+		public void SendRenameMessage(string newName)
 		{
 			public_Channel.Send (DemoConsts.Events.Rename, newName, owner.Udid);
 		}

@@ -1,17 +1,20 @@
-﻿using System;
-using System.Text;
-using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
-using Transmitter.Net;
 using Transmitter.Tool;
-using Transmitter.Model;
 
-namespace Transmitter.Demo
+namespace Transmitter.Demo.UI
 {
 	public class UIController
 	{
+		public UIController(NetworkPlayer netWorkPlayer)
+		{
+			this.netWorkPlayer = netWorkPlayer;
+		}
+		
+		[SerializeField][ReadOnly]
+		NetworkPlayer netWorkPlayer;
+		
 		[SerializeField][ReadOnly]
 		DialogBox dialogBox;
 
@@ -27,6 +30,8 @@ namespace Transmitter.Demo
 		[SerializeField][ReadOnly]
 		List<PlayerField> otherPlayerFields;
 
+		InputController renameMessageController;
+
 		public void SetupRef(RefBinder refBinder)
 		{
 			GameObject dialogBoxGo = refBinder.GetGameobject (DemoConsts.AssetKeys.DialogBox);
@@ -36,6 +41,10 @@ namespace Transmitter.Demo
 			otherPlayerFieldsRoot = refBinder.GetComponent<Transform> (DemoConsts.AssetKeys.OtherPlayerRoot);
 
 			otherPlayerFields = new List<PlayerField> ();
+
+			InputField renameInputField = refBinder.GetComponent<InputField> (DemoConsts.AssetKeys.RenameInputField);
+			Button renameBtn = refBinder.GetComponent<Button> (DemoConsts.AssetKeys.RenameBtn);
+			renameMessageController = new InputController (renameInputField, renameBtn, SendRenameMessage);
 		}
 
 		public void CreateOwnerPlayerField(string playerName, ushort udid)
@@ -75,6 +84,11 @@ namespace Transmitter.Demo
 			{
 				Debug.LogError ($"{udid} 找不到對應的 玩家資料緩存");
 			}
+		}
+
+		public void SendRenameMessage(string newName)
+		{
+			netWorkPlayer.SendRenameMessage (newName);
 		}
 	}
 }
