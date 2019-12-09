@@ -109,8 +109,12 @@ namespace Transmitter.Demo
 
 		public void Close()
 		{
-			//關閉之前要把它控管的實體遊戲物件刪除
-			MonoBehaviour.Destroy (ownerGoRoot);
+			// 可能callback回來的時候 包含物件在內的 整個頂點被刪除
+			if (ownerGoRoot != null) 
+			{
+				//關閉之前要把它控管的實體遊戲物件刪除
+				MonoBehaviour.Destroy (ownerGoRoot);
+			}
 		}
 
 		public enum PlayerFieldStyle

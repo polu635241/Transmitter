@@ -57,6 +57,12 @@ namespace Transmitter.Demo.UI
 			ownerPlayerField.SetPlayerName (playerName);
 		}
 
+		public void CreateOtherPlayerField(string playerName, ushort udid)
+		{
+			PlayerField otherPlayerField = PlayerField.Create (playerName, udid, PlayerField.PlayerFieldStyle.Other, otherPlayerFieldsRoot);
+			otherPlayerFields.Add (otherPlayerField);
+		}
+
 		public void SetOtherPlayerName (string playerName, ushort udid)
 		{
 			PlayerField findPlayerField = otherPlayerFields.Find (field => field.UDID == udid);
@@ -71,7 +77,7 @@ namespace Transmitter.Demo.UI
 			}
 		}
 
-		public void RemoveOtherPlayerName(ushort udid)
+		public void RemoveOtherPlayerNameField(ushort udid)
 		{
 			PlayerField findPlayerField = otherPlayerFields.Find (field => field.UDID == udid);
 

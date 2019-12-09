@@ -71,16 +71,25 @@ namespace Transmitter.Demo
 			string defaultName = string.Format (DefaultPlayerNameFormat, udid);
 			uiController.CreateOwnerPlayerField (defaultName, udid);
 			networkMapper.SetPlayerNamePair (defaultName, udid);
+
+			others.ForEach ((userData)=>
+				{
+					OnUserAdd(userData);
+				});
 		}
 
 		void OnUserAdd(UserData userData)
 		{
+			ushort udid = userData.Udid;
+			string defaultName = string.Format (DefaultPlayerNameFormat, udid);
 
+			uiController.CreateOtherPlayerField (defaultName, udid);
+			networkMapper.SetPlayerNamePair (defaultName, udid);
 		}
 
 		void OnUserRemove(UserData userData)
 		{
-
+			uiController.RemoveOtherPlayerNameField (userData.Udid);
 		}
 
 		void SendMessage(string message)
