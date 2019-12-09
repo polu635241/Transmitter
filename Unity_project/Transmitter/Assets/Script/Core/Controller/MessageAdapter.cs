@@ -297,12 +297,30 @@ namespace Transmitter.Net
 		#endregion
 
 		#region Factory
-		internal Channel BindChannel(string channelKey)
+		/// <summary>
+		/// 不使用static搭配工廠方法是因為要支援一個project可能會有兩個client 這時候他們 開啟同樣名字的channel就會被鎖定
+		/// 所以以每個client最為分界 個別擁有各自的channel集合
+		/// </summary>
+		/// <returns>The factory.</returns>
+		/// <param name="channelKey">Channel key.</param>
+		/// <param name="messageController">Message controller.</param>
+		internal Channel BindChannel (string channelKey)
 		{
-			Channel channel = Channel.ChannelFactory (channelKey, this);
-			channelTable.Add (channel);
-			return channel;
+			if (!usedChannelKeys.Contains (channelKey)) 
+			{
+				usedChannelKeys.Add (channelKey);
+
+				Channel newChannel = new Channel (channelKey, this);
+				channelTable.Add (newChannel);
+				return newChannel;
+			}
+			else 
+			{
+				throw new UnityException (string.Format ("已存在相同key 的Channel -> {0}", channelKey));
+			}
 		}
+
+		List<string> usedChannelKeys = new List<string>();
 		#endregion
 
 		internal void Close()

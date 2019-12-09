@@ -18,7 +18,6 @@ namespace Transmitter.Net
 
 		MessageAdapter messageAdapter;
 			
-
 		LobbyController lobbyController;
 
 		[SerializeField][ReadOnly]

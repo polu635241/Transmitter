@@ -12,10 +12,9 @@ namespace Transmitter.Model
 {
 	public class Channel
 	{
-		static List<string> usedChannelKeys = new List<string>();
 		MessageAdapter messageAdapter;
 
-		Channel (string channelkey, MessageAdapter messageAdapter)
+		internal Channel (string channelkey, MessageAdapter messageAdapter)
 		{
 			this.channelkey = channelkey;
 			this.messageAdapter = messageAdapter;
@@ -28,20 +27,6 @@ namespace Transmitter.Model
 			get
 			{
 				return channelkey;
-			}
-		}
-
-		public static Channel ChannelFactory (string channelKey, MessageAdapter messageController)
-		{
-			if (!usedChannelKeys.Contains (channelKey)) 
-			{
-				usedChannelKeys.Add (channelKey);
-
-				return new Channel (channelKey, messageController);
-			}
-			else 
-			{
-				throw new UnityException (string.Format ("已存在相同key 的Channel -> {0}", channelKey));
 			}
 		}
 
