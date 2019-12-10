@@ -130,6 +130,8 @@ namespace Transmitter.Net
 			this.members = new List<UserData> (otherMembers);
 			this.members.Add (owner);
 
+			this.owner = owner;
+
 			onJoinLobby.Invoke (otherMembers, owner);
 		}
 

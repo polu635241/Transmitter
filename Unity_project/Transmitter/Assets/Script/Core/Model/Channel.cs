@@ -125,9 +125,9 @@ namespace Transmitter.Model
 		/// <param name="assignUdid">Assign udid.</param>
 		/// <param name="eventName">Event name.</param>
 		/// <param name="objs">Objects.</param>
-		public void SendAssign (short assignUdid, string eventName, params System.Object[] objs)
+		public void SendAssign (ushort assignUdid, string eventName, params System.Object[] objs)
 		{
-			messageAdapter.SendGameMessage (assignUdid, this.channelkey, eventName, objs);
+			messageAdapter.SendGameMessage ((short)assignUdid, this.channelkey, eventName, objs);
 		}
 	}
 }
