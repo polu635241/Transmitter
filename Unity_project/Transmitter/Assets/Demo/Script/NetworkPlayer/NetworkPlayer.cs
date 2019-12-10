@@ -22,14 +22,20 @@ namespace Transmitter.Demo
 		RefBinder refBinder;
 
 		NetworkMapper networkMapper;
+		NetworkPlayerData networkPlayerData;
 
 		/// <summary>
 		/// 公開群聊
 		/// </summary>
 		Channel public_Channel;
 
-		[SerializeField][ReadOnly]
-		UserData owner;
+		UserData Owner
+		{
+			get
+			{
+				return client.LobbyController.Owner;
+			}
+		}
 
 		[SerializeField][ReadOnly]
 		UIController uiController;
@@ -66,8 +72,10 @@ namespace Transmitter.Demo
 
 		void OnJoinLobby(List<UserData> others, UserData owner)
 		{
-			this.owner = owner;
 			ushort udid = owner.Udid;
+
+			networkPlayerData = new NetworkPlayerData (udid);
+
 			string defaultName = string.Format (DefaultPlayerNameFormat, udid);
 			uiController.CreateOwnerPlayerField (defaultName, udid);
 			networkMapper.SetPlayerNamePair (defaultName, udid);
@@ -85,6 +93,13 @@ namespace Transmitter.Demo
 
 			uiController.CreateOtherPlayerField (defaultName, udid);
 			networkMapper.SetPlayerNamePair (defaultName, udid);
+
+			//玩家進來後 會透過UDID生成預設的人物ID 如果改過名字 就把新的名字傳給別人
+			if (networkPlayerData.HasModifyPlayerName) 
+			{
+				string currentName = networkPlayerData.PlayerName;
+				public_Channel.SendAssign (udid, DemoConsts.Events.Rename, currentName, Owner.Udid);
+			}
 		}
 
 		void OnUserRemove(UserData userData)
@@ -94,19 +109,21 @@ namespace Transmitter.Demo
 
 		void SendMessage(string message)
 		{
-			public_Channel.Send (DemoConsts.Events.SendMessage, owner.Udid, message);
+			public_Channel.Send (DemoConsts.Events.SendMessage, Owner.Udid, message);
 		}
 
 		public void SendRenameMessage(string newName)
 		{
-			public_Channel.Send (DemoConsts.Events.Rename, newName, owner.Udid);
+			//本地端先緩存修改紀錄 UI依然透過封包修改 保持一致性
+			networkPlayerData.PlayerName = newName;
+			public_Channel.Send (DemoConsts.Events.Rename, newName, Owner.Udid);
 		}
 
 		void ReceiveRename(string newName, ushort udid)
 		{
 			networkMapper.SetPlayerNamePair (newName, udid);
 
-			if (udid == owner.Udid) 
+			if (udid == Owner.Udid) 
 			{
 				uiController.SetOwnerPlayerName (newName);
 			}
