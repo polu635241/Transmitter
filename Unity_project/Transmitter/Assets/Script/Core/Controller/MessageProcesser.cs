@@ -256,9 +256,9 @@ namespace Transmitter.Net
 			}
 		}
 
-		internal void AddSendGameMessage (string channelName, string eventName, System.Object[] objs)
+		internal void AddSendGameMessage (short assignUdid, string channelName, string eventName, System.Object[] objs)
 		{
-			GameMessageData data = GameMessageData.Create (channelName, eventName, objs);
+			GameMessageData data = GameMessageData.Create (assignUdid, channelName, eventName, objs);
 
 			lock(waitSendGameMessageLocker)
 			{

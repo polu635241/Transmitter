@@ -25,7 +25,14 @@ namespace Transmitter.Net
 		/// <summary>
 		/// 自己
 		/// </summary>
-		internal UserData Owner;
+		internal UserData Owner
+		{
+			get
+			{
+				return owner;
+			}	
+		}
+
 		UserData owner;
 
 		/// <summary>

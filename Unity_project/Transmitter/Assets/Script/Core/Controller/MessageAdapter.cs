@@ -16,6 +16,8 @@ namespace Transmitter.Net
 
 		MessageProcesser messageProcesser;
 
+		Transmitter_Client client;
+
 		object waitSendMessageLocker;
 
 		List<byte[]> waitSendMessages = new List<byte[]> ();
@@ -57,8 +59,9 @@ namespace Transmitter.Net
 		/// <summary>
 		/// 只能在主線程呼叫Init以便記錄unity thread主線程是誰
 		/// </summary>
-		internal MessageAdapter()
+		internal MessageAdapter(Transmitter_Client client)
 		{
+			this.client = client;
 			waitSendMessageLocker = new object ();
 			waitSendMessages = new List<byte[]> ();
 			messageProcesser = new MessageProcesser (this);
@@ -125,6 +128,19 @@ namespace Transmitter.Net
 		//接收處理完成的封包 並找到對應的callback進行觸發
 		internal void ReceiveProcessGameMessage(GameMessageData data)
 		{
+			bool assignSelfMessage = false;
+
+			if (data.AssignUdid == -1 || data.AssignUdid == client.LobbyController.Owner.Udid) 
+			{
+				assignSelfMessage = true;
+			}
+
+			//這個封包不是給我的
+			if (!assignSelfMessage) 
+			{
+				return;
+			}
+			
 			EventNamePairDelegats eventNamePairDelegats;
 
 			if(gameCallbackTable.TryGetValue(data.ChannelName,out eventNamePairDelegats))
@@ -135,14 +151,6 @@ namespace Transmitter.Net
 				{
 					bindCacheData.Trigger (data.Objs);
 				}
-				else
-				{
-					throw new UnityException ("指定的event name不存在 -> " + data.EventName);
-				}
-			}
-			else
-			{
-				throw new UnityException ("指定的channel名稱不存在  -> " + data.ChannelName);
 			}
 		}
 
@@ -284,9 +292,16 @@ namespace Transmitter.Net
 			return bindCacheData;
 		}
 
-		internal void SendGameMessage (string channelName, string eventName, params System.Object[] objs)
+		/// <summary>
+		/// 指定訊息只有指定使用可以收到 -1則是全域訊息
+		/// </summary>
+		/// <param name="assignUdid">Assign udid.</param>
+		/// <param name="channelName">Channel name.</param>
+		/// <param name="eventName">Event name.</param>
+		/// <param name="objs">Objects.</param>
+		internal void SendGameMessage (short assignUdid, string channelName, string eventName, params System.Object[] objs)
 		{
-			messageProcesser.AddSendGameMessage (channelName, eventName, objs);
+			messageProcesser.AddSendGameMessage (assignUdid, channelName, eventName, objs);
 		}
 
 		internal void SendLobbyMessage (ushort header, object content)

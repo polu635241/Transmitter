@@ -109,9 +109,25 @@ namespace Transmitter.Model
 
 		#endregion
 
+		/// <summary>
+		/// 全域發送
+		/// </summary>
+		/// <param name="eventName">Event name.</param>
+		/// <param name="objs">Objects.</param>
 		public void Send(string eventName,params System.Object[] objs)
 		{
-			messageAdapter.SendGameMessage (this.channelkey,eventName,objs);
+			messageAdapter.SendGameMessage ((short)-1, this.channelkey, eventName, objs);
+		}
+
+		/// <summary>
+		/// 發送給指定使用者
+		/// </summary>
+		/// <param name="assignUdid">Assign udid.</param>
+		/// <param name="eventName">Event name.</param>
+		/// <param name="objs">Objects.</param>
+		public void SendAssign (short assignUdid, string eventName, params System.Object[] objs)
+		{
+			messageAdapter.SendGameMessage (assignUdid, this.channelkey, eventName, objs);
 		}
 	}
 }

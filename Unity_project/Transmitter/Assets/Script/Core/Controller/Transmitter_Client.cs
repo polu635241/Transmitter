@@ -17,7 +17,15 @@ namespace Transmitter.Net
 		SocketController socketController;
 
 		MessageAdapter messageAdapter;
-			
+
+		public LobbyController LobbyController
+		{
+			get
+			{
+				return lobbyController;
+			}
+		}
+
 		LobbyController lobbyController;
 
 		[SerializeField][ReadOnly]
@@ -27,7 +35,7 @@ namespace Transmitter.Net
 
 		public void Awake()
 		{
-			messageAdapter = new MessageAdapter ();
+			messageAdapter = new MessageAdapter (this);
 			socketController = new SocketController (messageAdapter, this);
 			lobbyController = new LobbyController (messageAdapter);
 		}
