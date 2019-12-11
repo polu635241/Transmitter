@@ -128,40 +128,53 @@ namespace Transmitter.Model
 			{
 			case 0:
 				{
-					noVarActions.ForEach (callback => callback.Invoke ());
+					List<Action> _noVarActions = new List<Action> (noVarActions);
+
+					_noVarActions.ForEach (callback => callback.Invoke ());
+
 					break;
 				}
 
 			case 1:
 				{
-					oneVarActions.ForEach (callback => callback.Invoke (objs [0]));
+					List<Action<object>> _oneVarActions = new List<Action<object>> (oneVarActions);
+
+					_oneVarActions.ForEach (callback => callback.Invoke (objs [0]));
 					break;
 				}
 
 			case 2:
 				{
-					twoVarActions.ForEach (callback => 
+					List<Action<object,object>> _twoVarActions = new List<Action<object, object>> (twoVarActions);
+					
+					_twoVarActions.ForEach (callback => 
 						callback.Invoke (objs [0], objs [1]));
 					break;
 				}
 
 			case 3:
 				{
-					threeVarActions.ForEach (callback => 
+					List<Action<object,object,object>> _threeVarActions = new List<Action<object, object, object>> (threeVarActions);
+					
+					_threeVarActions.ForEach (callback => 
 						callback.Invoke (objs [0], objs [1], objs [2]));
 					break;
 				}
 
 			case 4:
 				{
-					fourVarActions.ForEach (callback => 
+					List<Action<object,object,object,object>> _fourVarActions = new List<Action<object, object, object, object>> (fourVarActions);
+					
+					_fourVarActions.ForEach (callback => 
 						callback.Invoke (objs [0], objs [1], objs [2], objs [3]));
 					break;
 				}
 
 			case 5:
 				{
-					fiveVarActions.ForEach (callback => 
+					List<Action<object,object,object,object,object>> _fiveVarActions = new List<Action<object, object, object, object, object>> (fiveVarActions);
+					
+					_fiveVarActions.ForEach (callback => 
 						callback.Invoke (objs [0], objs [1], objs [2], objs [3], objs [4]));
 					break;
 				}
