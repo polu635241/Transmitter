@@ -65,9 +65,7 @@ namespace Transmitter.Demo
 		{
 			public_Channel = client.BindChinnel (DemoConsts.Channels.Player);
 			client.RegeistedOnJoinLobby (OnJoinLobby);
-			client.RegeistedOnUserAdd (OnUserAdd);
-			client.RegeistedOnUserRemove (OnUserRemove);
-			public_Channel.Bind<string,ushort> (DemoConsts.Events.Rename, ReceiveRename);
+			public_Channel.Bind<string,ushort> (DemoConsts.Events.Rename, UpdateName);
 		}
 
 		void OnJoinLobby(List<UserData> others, UserData owner)
@@ -80,10 +78,59 @@ namespace Transmitter.Demo
 			uiController.CreateOwnerPlayerField (defaultName, udid);
 			networkMapper.SetPlayerNamePair (defaultName, udid);
 
-			others.ForEach ((userData)=>
+			StartCoroutine (PlayerSharkHandCoroutine ());
+		}
+
+		IEnumerator PlayerSharkHandCoroutine()
+		{
+			bool recevieAllPlayerName = false;
+
+			List<RefKeyValuePair<ushort,string>> allPlayerNamePair = new List<RefKeyValuePair<ushort, string>> ();
+
+			while (!recevieAllPlayerName) 
+			{
+				List<UserData> userDatas = client.LobbyController.Members;
+
+				recevieAllPlayerName = userDatas.TrueForAll (userData => 
+					{
+						string playerName = string.Empty;
+						
+						if(networkMapper.TryGetPlayerName(userData.Udid, out playerName))
+						{
+							allPlayerNamePair.Add(new RefKeyValuePair<ushort, string>(userData.Udid,playerName));
+							return true;
+						}
+						else
+						{
+							return false;
+						}
+					});
+
+				if (!recevieAllPlayerName) 
 				{
-					OnUserAdd(userData);
-				});
+					//每一偵玩家都可能增減 所以每次失敗都要清空
+					allPlayerNamePair.Clear ();
+					yield return null;
+				}
+
+				allPlayerNamePair.ForEach (pair=>
+					{
+						uiController.CreateOtherPlayerField(pair.value, pair.key);
+					});
+			}
+
+			public_Channel.UnBind<string,ushort> (DemoConsts.Events.Rename, UpdateName);
+
+			BindEventAfterSharkHand ();
+		}
+
+		void BindEventAfterSharkHand()
+		{
+			client.RegeistedOnUserAdd (OnUserAdd);
+			client.RegeistedOnUserRemove (OnUserRemove);
+
+			//玩家與玩家間的交握完畢後 才會一次性生成玩家名條
+			public_Channel.Bind<string,ushort> (DemoConsts.Events.Rename, ReceiveRename);
 		}
 
 		void OnUserAdd(UserData userData)
@@ -94,12 +141,8 @@ namespace Transmitter.Demo
 			uiController.CreateOtherPlayerField (defaultName, udid);
 			networkMapper.SetPlayerNamePair (defaultName, udid);
 
-			//玩家進來後 會透過UDID生成預設的人物ID 如果改過名字 就把新的名字傳給別人
-			if (networkPlayerData.HasModifyPlayerName) 
-			{
-				string currentName = networkPlayerData.PlayerName;
-				public_Channel.SendAssign (udid, DemoConsts.Events.Rename, currentName, Owner.Udid);
-			}
+			string currentName = networkPlayerData.PlayerName;
+			public_Channel.SendAssign (udid, DemoConsts.Events.Rename, currentName, Owner.Udid);
 		}
 
 		void OnUserRemove(UserData userData)
@@ -121,7 +164,7 @@ namespace Transmitter.Demo
 
 		void ReceiveRename(string newName, ushort udid)
 		{
-			networkMapper.SetPlayerNamePair (newName, udid);
+			UpdateName (newName, udid);
 
 			if (udid == Owner.Udid) 
 			{
@@ -131,6 +174,11 @@ namespace Transmitter.Demo
 			{
 				uiController.SetOtherPlayerName (newName, udid);
 			}
+		}
+
+		void UpdateName(string newName, ushort udid)
+		{
+			networkMapper.SetPlayerNamePair (newName, udid);
 		}
 	}
 }
