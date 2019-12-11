@@ -31,23 +31,23 @@ namespace Transmitter.Demo
 			}
 		}
 
-		public string GetPlayerName(ushort udid)
+		public bool TryGetPlayerName(ushort udid, out string playerName)
 		{
-			string playerName;
-			
-			if (!udidPairPlayerName.TryGetValue (udid, out playerName)) 
-			{
-				Debug.LogError ("Can't query this playerName");
-				playerName = "UnKnuow";
-			}
-
-			return playerName;
+			return udidPairPlayerName.TryGetValue (udid, out playerName);
 		}
 
 		public string ConvertPlayerMsg (string msg, ushort udid)
 		{
-			string playerName = GetPlayerName (udid);
-			return string.Format (PlayerMsgFormat, playerName, msg);
+			string playerName = string.Empty;
+
+			if (TryGetPlayerName (udid, out playerName)) 
+			{
+				return string.Format (PlayerMsgFormat, playerName, msg);
+			}
+			else
+			{
+				throw new Exception ("找不到對應的玩家名稱緩存");	
+			}
 		}
 
 	}
