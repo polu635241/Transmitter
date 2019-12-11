@@ -102,7 +102,19 @@ namespace Transmitter.Net
 			lobbyController.OnJoinLobby (otherMembers, owner);
 		}
 
+		#if UNITY_EDITOR
+		void OnDestroy()
+		{
+			Close ();
+		}
+		#else
 		void OnApplicationQuit()
+		{
+			Close ();
+		}
+		#endif
+
+		void Close()
 		{
 			socketController?.Close ();
 			messageAdapter?.Close ();
