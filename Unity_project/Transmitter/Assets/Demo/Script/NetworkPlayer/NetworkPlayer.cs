@@ -87,11 +87,11 @@ namespace Transmitter.Demo
 		{
 			bool recevieAllPlayerName = false;
 
-			List<RefKeyValuePair<ushort,string>> allPlayerNamePair = new List<RefKeyValuePair<ushort, string>> ();
+			List<RefKeyValuePair<ushort,string>> otherPlayerNamePair = new List<RefKeyValuePair<ushort, string>> ();
 
 			while (!recevieAllPlayerName) 
 			{
-				List<UserData> userDatas = client.LobbyController.Members;
+				List<UserData> userDatas = client.LobbyController.OtherMembers;
 
 				recevieAllPlayerName = userDatas.TrueForAll (userData => 
 					{
@@ -99,7 +99,7 @@ namespace Transmitter.Demo
 						
 						if(networkMapper.TryGetPlayerName(userData.Udid, out playerName))
 						{
-							allPlayerNamePair.Add(new RefKeyValuePair<ushort, string>(userData.Udid,playerName));
+							otherPlayerNamePair.Add(new RefKeyValuePair<ushort, string>(userData.Udid,playerName));
 							return true;
 						}
 						else
@@ -111,11 +111,11 @@ namespace Transmitter.Demo
 				if (!recevieAllPlayerName) 
 				{
 					//每一偵玩家都可能增減 所以每次失敗都要清空
-					allPlayerNamePair.Clear ();
+					otherPlayerNamePair.Clear ();
 					yield return null;
 				}
 
-				allPlayerNamePair.ForEach (pair=>
+				otherPlayerNamePair.ForEach (pair=>
 					{
 						uiController.CreateOtherPlayerField(pair.value, pair.key);
 					});
