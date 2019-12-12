@@ -9,11 +9,13 @@ using Transmitter.Tool;
 
 namespace Transmitter.Demo
 {
+	[Serializable]
 	public class NetworkPlayerData
 	{
-		public NetworkPlayerData(ushort udid)
+		public NetworkPlayerData (ushort udid, string playerName)
 		{
 			this.udid = udid;
+			this.playerName = playerName;
 		}
 		
 		public ushort Udid
@@ -27,17 +29,6 @@ namespace Transmitter.Demo
 		[SerializeField][ReadOnly]
 		ushort udid;
 
-		public bool HasModifyPlayerName
-		{
-			get
-			{
-				return hasModifyPlayerName;
-			}
-		}
-
-		[SerializeField][ReadOnly]
-		bool hasModifyPlayerName;
-
 		public string PlayerName
 		{
 			get
@@ -48,7 +39,6 @@ namespace Transmitter.Demo
 			set
 			{
 				playerName = value;
-				hasModifyPlayerName = true;
 			}
 		}
 

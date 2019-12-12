@@ -22,6 +22,8 @@ namespace Transmitter.Demo
 		RefBinder refBinder;
 
 		NetworkMapper networkMapper;
+
+		[SerializeField][ReadOnly]
 		NetworkPlayerData networkPlayerData;
 
 		/// <summary>
@@ -71,10 +73,10 @@ namespace Transmitter.Demo
 		void OnJoinLobby(List<UserData> others, UserData owner)
 		{
 			ushort udid = owner.Udid;
-
-			networkPlayerData = new NetworkPlayerData (udid);
-
 			string defaultName = string.Format (DefaultPlayerNameFormat, udid);
+
+			networkPlayerData = new NetworkPlayerData (udid, defaultName);
+
 			uiController.CreateOwnerPlayerField (defaultName, udid);
 			networkMapper.SetPlayerNamePair (defaultName, udid);
 
