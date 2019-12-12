@@ -61,7 +61,7 @@ namespace Transmitter.Net
 			}
 		}
 
-		internal List<UserData> otherMembers = new List<UserData>();
+		private List<UserData> otherMembers = new List<UserData>();
 
 		LobbylBindCacheData lobbylBindCacheData = new LobbylBindCacheData();
 
