@@ -156,11 +156,20 @@ namespace Transmitter.Model
 					for (int i = 0; i < objs.Length; i++) 
 					{
 						object _object = objs[i];
-						string fullName = _object.GetType().FullName;
-						binaryWriter.Write(fullName);
-						byte[] objBuffer = serializeObjToBuffer(fullName, objs[i]);
-						binaryWriter.Write((ushort)objBuffer.Length);
-						binaryWriter.Write(objBuffer);
+
+						//改為先寫長度 這樣偵測到空物件時 才能直接寫0 空物件抓不到 type name
+						if(_object!=null)
+						{
+							string fullName = _object.GetType().FullName;
+							byte[] objBuffer = serializeObjToBuffer(fullName, objs[i]);
+							binaryWriter.Write((ushort)objBuffer.Length);
+							binaryWriter.Write(fullName);
+							binaryWriter.Write(objBuffer);
+						}
+						else
+						{
+							binaryWriter.Write((ushort)0);
+						}
 					}
 				}
 
@@ -210,11 +219,22 @@ namespace Transmitter.Model
 
 					for (int i = 0; i < parsCount; i++) 
 					{
-						string objectTypeFullName = binaryReader.ReadString();
-						ushort parBufferLen = binaryReader.ReadUInt16 ();
-						byte[] parBuffer = binaryReader.ReadBytes (parBufferLen);
+						object obj = null;
 
-						object obj = deserializeToObject(objectTypeFullName,parBuffer);
+						//改為先讀長度 這樣讀到0時 才能直接null 空物件抓不到 type name
+						ushort parBufferLen = binaryReader.ReadUInt16 ();
+
+						if(parBufferLen!=0)
+						{
+							string objectTypeFullName = binaryReader.ReadString();
+							byte[] parBuffer = binaryReader.ReadBytes (parBufferLen);
+							
+							obj = deserializeToObject(objectTypeFullName,parBuffer);
+						}
+						else
+						{
+							obj = null;
+						}
 
 						parTable.Add(obj);
 					}
