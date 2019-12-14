@@ -132,7 +132,8 @@ namespace Transmitter.Demo
 			client.RegeistedOnUserRemove (OnUserRemove);
 
 			//玩家與玩家間的交握完畢後 才會一次性生成玩家名條
-			public_Channel.Bind<string,ushort> (DemoConsts.Events.Rename, ReceiveRename);
+			public_Channel.Bind<string,ushort> (DemoConsts.Events.Rename, ReceiveRenameMessage);
+			public_Channel.Bind<string,ushort> (DemoConsts.Events.SendMessage, ReceiveTalkMessage);
 		}
 
 		void OnUserAdd(UserData userData)
@@ -152,9 +153,23 @@ namespace Transmitter.Demo
 			uiController.RemoveOtherPlayerNameField (userData.Udid);
 		}
 
-		void SendMessage(string message)
+		public void SendTalkMessage(string message)
 		{
-			public_Channel.Send (DemoConsts.Events.SendMessage, Owner.Udid, message);
+			public_Channel.Send (DemoConsts.Events.SendMessage, message, Owner.Udid);
+		}
+
+		void ReceiveTalkMessage(string message, ushort udid)
+		{
+			string playerName = "";
+
+			if (networkMapper.TryGetPlayerName (udid, out playerName))
+			{
+				uiController.ReceiveTalkMessage (playerName, message);
+			}
+			else
+			{
+				Debug.LogError ($"找不到對應的玩家名稱緩存 {udid}");
+			}
 		}
 
 		public void SendRenameMessage(string newName)
@@ -164,17 +179,28 @@ namespace Transmitter.Demo
 			public_Channel.Send (DemoConsts.Events.Rename, newName, Owner.Udid);
 		}
 
-		void ReceiveRename(string newName, ushort udid)
+		void ReceiveRenameMessage(string newName, ushort udid)
 		{
-			UpdateName (newName, udid);
+			string oldName = "";
 
-			if (udid == Owner.Udid) 
+			if (networkMapper.TryGetPlayerName (udid, out oldName))
 			{
-				uiController.SetOwnerPlayerName (newName);
+				UpdateName (newName, udid);
+				
+				if (udid == Owner.Udid) 
+				{
+					uiController.SetOwnerPlayerName (newName);
+				}
+				else
+				{
+					uiController.SetOtherPlayerName (newName, udid);
+				}
+				
+				uiController.ReceiveRenameMessage (oldName, newName);
 			}
 			else
 			{
-				uiController.SetOtherPlayerName (newName, udid);
+				Debug.LogError ($"找不到對應的舊有玩家名稱緩存 {udid}");
 			}
 		}
 

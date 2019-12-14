@@ -6,6 +6,7 @@ using UnityEngine.UI;
 
 namespace Transmitter.Demo.UI
 {
+	[Serializable]
 	public class InputController
 	{
 		/// <summary>

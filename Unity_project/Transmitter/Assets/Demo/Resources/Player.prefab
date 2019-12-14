@@ -424,6 +424,10 @@ MonoBehaviour:
     go: {fileID: 1997278310764800}
   - key: OtherPlayerRoot
     go: {fileID: 1374992923280088}
+  - key: TalkInputField
+    go: {fileID: 1517761665275906}
+  - key: TalkBtn
+    go: {fileID: 1581664659906024}
 --- !u!114 &114072743474139562
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -789,9 +793,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   client: {fileID: 0}
   refBinder: {fileID: 0}
-  owner:
-    Udid: 0
-    Token: 
+  networkPlayerData:
+    udid: 0
+    playerName: 
 --- !u!114 &114594620607586290
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -1310,7 +1314,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 1}
   m_AnchorMax: {x: 0.5, y: 1}
-  m_AnchoredPosition: {x: 0.15002441, y: -182.84647}
+  m_AnchoredPosition: {x: 0.15002441, y: -182.95}
   m_SizeDelta: {x: 354.30005, y: 345}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!224 &224014247008390396
@@ -1672,7 +1676,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 32}
+  m_AnchoredPosition: {x: -369, y: 176}
   m_SizeDelta: {x: 100, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!224 &224938869334290808

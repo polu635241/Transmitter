@@ -20,6 +20,9 @@ namespace Transmitter.Demo
 			public const string RenameInputField = "RenameInputField";
 			public const string RenameBtn = "RenameBtn";
 
+			public const string TalkInputField = "TalkInputField";
+			public const string TalkBtn = "TalkBtn";
+
 			public const string OwnerPlayerRoot = "OwnerPlayerRoot";
 			public const string OtherPlayerRoot = "OtherPlayerRoot";
 			public const string PlayerNameText = "PlayerNameText";

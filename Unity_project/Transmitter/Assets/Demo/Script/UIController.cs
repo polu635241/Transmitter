@@ -1,12 +1,17 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using Transmitter.Tool;
 
 namespace Transmitter.Demo.UI
 {
+	[Serializable]
 	public class UIController
 	{
+		const string FormatRenameMessage = "{0} 更名為 {1}";
+		const string FormatSendMessage = "{0} : {1}";
+		
 		public UIController(NetworkPlayer netWorkPlayer)
 		{
 			this.netWorkPlayer = netWorkPlayer;
@@ -30,7 +35,11 @@ namespace Transmitter.Demo.UI
 		[SerializeField][ReadOnly]
 		List<PlayerField> otherPlayerFields;
 
-		InputController renameMessageController;
+		[SerializeField][ReadOnly]
+		InputController sendRenameMessageController;
+
+		[SerializeField][ReadOnly]
+		InputController sendTalkMessageController;
 
 		public void SetupRef(RefBinder refBinder)
 		{
@@ -44,7 +53,11 @@ namespace Transmitter.Demo.UI
 
 			InputField renameInputField = refBinder.GetComponent<InputField> (DemoConsts.AssetKeys.RenameInputField);
 			Button renameBtn = refBinder.GetComponent<Button> (DemoConsts.AssetKeys.RenameBtn);
-			renameMessageController = new InputController (renameInputField, renameBtn, SendRenameMessage);
+			sendRenameMessageController = new InputController (renameInputField, renameBtn, SendRenameMessage);
+
+			InputField talkInputField = refBinder.GetComponent<InputField> (DemoConsts.AssetKeys.TalkInputField);
+			Button talkBtn = refBinder.GetComponent<Button> (DemoConsts.AssetKeys.TalkBtn);
+			sendTalkMessageController = new InputController (talkInputField, talkBtn, SendTalkMessage);
 		}
 
 		public void CreateOwnerPlayerField(string playerName, ushort udid)
@@ -95,6 +108,23 @@ namespace Transmitter.Demo.UI
 		public void SendRenameMessage(string newName)
 		{
 			netWorkPlayer.SendRenameMessage (newName);
+		}
+
+		public void ReceiveRenameMessage (string oldName, string newName)
+		{
+			string processMessage = string.Format (FormatRenameMessage, oldName, newName);
+			dialogBox.Input (processMessage);
+		}
+
+		public void SendTalkMessage(string message)
+		{
+			netWorkPlayer.SendTalkMessage (message);
+		}
+
+		public void ReceiveTalkMessage (string playerName, string message)
+		{
+			string processMessage = string.Format (FormatSendMessage, playerName, message);
+			dialogBox.Input (processMessage);
 		}
 	}
 }
