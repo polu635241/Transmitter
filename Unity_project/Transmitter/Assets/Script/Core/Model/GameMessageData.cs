@@ -10,11 +10,21 @@ using System.Runtime.Serialization.Formatters.Binary;
 using UnityEngine;
 using Transmitter.DataStruct;
 
-namespace Transmitter.Net.Model
+namespace Transmitter.Model
 {
 	[Serializable]
 	public class GameMessageData
 	{
+		short assignUdid;
+
+		public short AssignUdid
+		{
+			get
+			{
+				return assignUdid;
+			}
+		}
+		
 		string channelName;
 
 		public string ChannelName
@@ -46,6 +56,8 @@ namespace Transmitter.Net.Model
 		}
 
 		#region 合成公式
+		// short  發送對象 -1為全域
+
 		// string (頻道)
 
 		// string (事件)
@@ -61,10 +73,10 @@ namespace Transmitter.Net.Model
 		/// <summary>
 		/// 透過實體物件建構
 		/// </summary>
-		public static GameMessageData Create(string channelName,string eventName,params object[] objs)
+		public static GameMessageData Create(short assignUdid,string channelName,string eventName,params object[] objs)
 		{
-			
 			GameMessageData messageData = new GameMessageData ();
+			messageData.assignUdid = assignUdid;
 			messageData.channelName = channelName;
 			messageData.eventName = eventName;
 			messageData.objs = objs;
@@ -124,6 +136,9 @@ namespace Transmitter.Net.Model
 				memoryStream = new MemoryStream();
 				binaryWriter = new BinaryWriter(memoryStream);
 
+				//寫入發送對象
+				binaryWriter.Write(assignUdid);
+
 				//寫入頻道名稱
 				binaryWriter.Write(channelName);
 
@@ -141,11 +156,20 @@ namespace Transmitter.Net.Model
 					for (int i = 0; i < objs.Length; i++) 
 					{
 						object _object = objs[i];
-						string fullName = _object.GetType().FullName;
-						binaryWriter.Write(fullName);
-						byte[] objBuffer = serializeObjToBuffer(fullName, objs[i]);
-						binaryWriter.Write((ushort)objBuffer.Length);
-						binaryWriter.Write(objBuffer);
+
+						//改為先寫長度 這樣偵測到空物件時 才能直接寫0 空物件抓不到 type name
+						if(_object!=null)
+						{
+							string fullName = _object.GetType().FullName;
+							byte[] objBuffer = serializeObjToBuffer(fullName, objs[i]);
+							binaryWriter.Write((ushort)objBuffer.Length);
+							binaryWriter.Write(fullName);
+							binaryWriter.Write(objBuffer);
+						}
+						else
+						{
+							binaryWriter.Write((ushort)0);
+						}
 					}
 				}
 
@@ -181,6 +205,8 @@ namespace Transmitter.Net.Model
 				memoryStream = new MemoryStream(byteData);
 				binaryReader = new BinaryReader(memoryStream);
 
+				messageData.assignUdid = binaryReader.ReadInt16();
+
 				messageData.channelName = binaryReader.ReadString();
 
 				messageData.eventName = binaryReader.ReadString();
@@ -193,11 +219,22 @@ namespace Transmitter.Net.Model
 
 					for (int i = 0; i < parsCount; i++) 
 					{
-						string objectTypeFullName = binaryReader.ReadString();
-						ushort parBufferLen = binaryReader.ReadUInt16 ();
-						byte[] parBuffer = binaryReader.ReadBytes (parBufferLen);
+						object obj = null;
 
-						object obj = deserializeToObject(objectTypeFullName,parBuffer);
+						//改為先讀長度 這樣讀到0時 才能直接null 空物件抓不到 type name
+						ushort parBufferLen = binaryReader.ReadUInt16 ();
+
+						if(parBufferLen!=0)
+						{
+							string objectTypeFullName = binaryReader.ReadString();
+							byte[] parBuffer = binaryReader.ReadBytes (parBufferLen);
+							
+							obj = deserializeToObject(objectTypeFullName,parBuffer);
+						}
+						else
+						{
+							obj = null;
+						}
 
 						parTable.Add(obj);
 					}

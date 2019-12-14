@@ -16,23 +16,7 @@ namespace Transmitter.Net
 
 		SocketController socketController;
 
-		public SocketController SocketController
-		{
-			get
-			{
-				return SocketController;
-			}
-		}
-
 		MessageAdapter messageAdapter;
-
-		public MessageAdapter MessageAdapter
-		{
-			get
-			{
-				return MessageAdapter;
-			}
-		}
 
 		public LobbyController LobbyController
 		{
@@ -49,9 +33,9 @@ namespace Transmitter.Net
 		int port;
 		string token;
 
-		public void Init()
+		public void Awake()
 		{
-			messageAdapter = new MessageAdapter ();
+			messageAdapter = new MessageAdapter (this);
 			socketController = new SocketController (messageAdapter, this);
 			lobbyController = new LobbyController (messageAdapter);
 		}
@@ -95,7 +79,42 @@ namespace Transmitter.Net
 			);
 		}
 
+		/// <summary>
+		/// 進入大廳時會回傳先前已經進入者的 UserDatas 以及自己的UserData
+		/// </summary>
+		public void RegeistedOnJoinLobby(Action<List<UserData>,UserData> onJoinLobby)
+		{
+			lobbyController.RegeistedOnJoinLobby (onJoinLobby);
+		}
+
+		public void RegeistedOnUserAdd(Action<UserData> onUserAddCallback)
+		{
+			lobbyController.RegeistedOnUserAdd (onUserAddCallback);
+		}
+
+		public void RegeistedOnUserRemove(Action<UserData> onUserRemoveCallback)
+		{
+			lobbyController.RegeistedOnUserRemove (onUserRemoveCallback);
+		}
+
+		internal void OnJoinLobby (List<UserData> otherMembers, UserData owner)
+		{
+			lobbyController.OnJoinLobby (otherMembers, owner);
+		}
+
+		#if UNITY_EDITOR
+		void OnDestroy()
+		{
+			Close ();
+		}
+		#else
 		void OnApplicationQuit()
+		{
+			Close ();
+		}
+		#endif
+
+		void Close()
 		{
 			socketController?.Close ();
 			messageAdapter?.Close ();

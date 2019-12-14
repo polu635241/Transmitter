@@ -76,7 +76,7 @@ namespace Transmitter
             }
             catch (Exception e)
             {
-                CursorModule.Instance.WriteLine(e.Message);
+                CursorModule.Instance.WriteLine(Tool.Tool.GetFullMessage(e));
             }
         }
     }

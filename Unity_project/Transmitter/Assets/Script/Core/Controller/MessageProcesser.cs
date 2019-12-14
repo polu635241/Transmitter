@@ -8,8 +8,8 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.Serialization.Formatters.Binary;
 using UnityEngine;
+using Transmitter.Model;
 using Transmitter.Serialize;
-using Transmitter.Net.Model;
 using Transmitter.DataStruct;
 
 namespace Transmitter.Net
@@ -18,7 +18,7 @@ namespace Transmitter.Net
 
 		ObjectDeserialize_Base deserializeProcess;
 
-		public ObjectDeserialize_Base DeserializeProcess
+		internal ObjectDeserialize_Base DeserializeProcess
 		{
 			get
 			{
@@ -28,7 +28,7 @@ namespace Transmitter.Net
 
 		ObjectSerialize_Base serializeProcess;
 
-		public ObjectSerialize_Base SerializeProcess
+		internal ObjectSerialize_Base SerializeProcess
 		{
 			get
 			{
@@ -61,7 +61,7 @@ namespace Transmitter.Net
 
 		Thread processMessageThread;
 
-		public MessageProcesser(MessageAdapter messageRouter)
+		internal MessageProcesser(MessageAdapter messageRouter)
 		{
 			waitReceiveLocker = new object ();
 			waitInvokeGameMessagesLocker = new object ();
@@ -86,7 +86,7 @@ namespace Transmitter.Net
 		}
 
 		//call in main thread
-		public void Update()
+		internal void Update()
 		{
 			#region Game
 			List<GameMessageData> gameMessageDatas = new List<GameMessageData> ();
@@ -122,7 +122,7 @@ namespace Transmitter.Net
 		}
 			
 		//call in sub thread
-		public void ProcessMessage()
+		internal void ProcessMessage()
 		{
 			while (true) 
 			{
@@ -192,7 +192,7 @@ namespace Transmitter.Net
 			}
 		}
 
-		public void ProcessSendMessage()
+		internal void ProcessSendMessage()
 		{
 			while(true)
 			{
@@ -248,7 +248,7 @@ namespace Transmitter.Net
 		}
 
 		#region Add Data
-		public void AddReceiveMessage(byte[] message)
+		internal void AddReceiveMessage(byte[] message)
 		{
 			lock (waitReceiveLocker) 
 			{
@@ -256,9 +256,9 @@ namespace Transmitter.Net
 			}
 		}
 
-		public void AddSendGameMessage (string channelName, string eventName, System.Object[] objs)
+		internal void AddSendGameMessage (short assignUdid, string channelName, string eventName, System.Object[] objs)
 		{
-			GameMessageData data = GameMessageData.Create (channelName, eventName, objs);
+			GameMessageData data = GameMessageData.Create (assignUdid, channelName, eventName, objs);
 
 			lock(waitSendGameMessageLocker)
 			{
@@ -266,7 +266,7 @@ namespace Transmitter.Net
 			}
 		}
 
-		public void AddSendLobbyMessage (ushort header, object content)
+		internal void AddSendLobbyMessage (ushort header, object content)
 		{
 			LobbyMessageData data = LobbyMessageData.Create (header, content);
 
@@ -278,7 +278,7 @@ namespace Transmitter.Net
 
 		#endregion
 
-		public void Close()
+		internal void Close()
 		{
 			processMessageThread?.Abort ();
 			processSendMessageThread?.Abort ();

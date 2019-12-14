@@ -14,7 +14,7 @@ namespace Transmitter.Net
 {
 	public class LobbyController
 	{
-		public LobbyController(MessageAdapter messageAdapter)
+		internal LobbyController(MessageAdapter messageAdapter)
 		{
 			this.messageAdapter = messageAdapter;
 			InitLobbyInit ();
@@ -25,14 +25,21 @@ namespace Transmitter.Net
 		/// <summary>
 		/// 自己
 		/// </summary>
-		public UserData Owner;
+		internal UserData Owner
+		{
+			get
+			{
+				return owner;
+			}	
+		}
+
 		UserData owner;
 
 		/// <summary>
 		/// 所有人 包含自己
 		/// </summary>
 		/// <value>The members.</value>
-		public List<UserData> Members
+		internal List<UserData> Members
 		{
 			get
 			{
@@ -46,7 +53,7 @@ namespace Transmitter.Net
 		/// 其他玩家 不含自己
 		/// </summary>
 		/// <value>The other members.</value>
-		public List<UserData> OtherMembers
+		internal List<UserData> OtherMembers
 		{
 			get
 			{
@@ -54,7 +61,7 @@ namespace Transmitter.Net
 			}
 		}
 
-		public List<UserData> otherMembers = new List<UserData>();
+		private List<UserData> otherMembers = new List<UserData>();
 
 		LobbylBindCacheData lobbylBindCacheData = new LobbylBindCacheData();
 
@@ -63,7 +70,7 @@ namespace Transmitter.Net
 		/// <summary>
 		/// 進入大廳時會回傳先前已經進入者的 UserDatas 以及自己的UserData
 		/// </summary>
-		public void RegeistedOnJoinLobby(Action<List<UserData>,UserData> onJoinLobby)
+		internal void RegeistedOnJoinLobby(Action<List<UserData>,UserData> onJoinLobby)
 		{
 			//只有這個是交握後才觸發 不是由大廳事件列管
 			this.onJoinLobby = onJoinLobby;
@@ -83,7 +90,7 @@ namespace Transmitter.Net
 
 		event Action<UserData> onUserAdd;
 
-		public void RegeistedOnUserAdd(Action<UserData> onUserAddCallback)
+		internal void RegeistedOnUserAdd(Action<UserData> onUserAddCallback)
 		{
 			this.onUserAdd += onUserAddCallback;
 		}
@@ -100,7 +107,7 @@ namespace Transmitter.Net
 
 		event Action<UserData> onUserRemove;
 
-		public void RegeistedOnUserRemove(Action<UserData> onUserRemoveCallback)
+		internal void RegeistedOnUserRemove(Action<UserData> onUserRemoveCallback)
 		{
 			this.onUserRemove += onUserRemoveCallback;
 		}
@@ -115,13 +122,15 @@ namespace Transmitter.Net
 			onUserRemove.Invoke(userData);
 		}
 
-		public void OnJoinLobby (List<UserData> otherMembers, UserData owner)
+		internal void OnJoinLobby (List<UserData> otherMembers, UserData owner)
 		{
 			this.otherMembers = new List<UserData> (otherMembers);
 
 			//在玩家登入的當下 自己是最後一個玩家 所以在列尾
 			this.members = new List<UserData> (otherMembers);
 			this.members.Add (owner);
+
+			this.owner = owner;
 
 			onJoinLobby.Invoke (otherMembers, owner);
 		}

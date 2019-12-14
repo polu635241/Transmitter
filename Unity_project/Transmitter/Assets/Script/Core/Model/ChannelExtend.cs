@@ -6,8 +6,9 @@ using System.Net.Sockets;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Transmitter.Net;
 
-namespace Transmitter.Net.Model
+namespace Transmitter.Model
 {
 	public static class ChannelExtend
 	{

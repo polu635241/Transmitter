@@ -16,7 +16,7 @@ namespace Transmitter.Net
 
 		#region display in Inspector
 		
-		public bool IsConnected
+		bool IsConnected
 		{
 			get
 			{
@@ -62,7 +62,7 @@ namespace Transmitter.Net
 
 		object runSharkHandHookLocker;
 
-		public SocketController (MessageAdapter messageAdapter, Transmitter_Client transmitter_Client)
+		internal SocketController (MessageAdapter messageAdapter, Transmitter_Client transmitter_Client)
 		{
 			receiveMessageLocker = new object ();
 			receiveMessages = new List<byte[]> ();
@@ -82,7 +82,7 @@ namespace Transmitter.Net
 		/// <param name="port">Port.</param>
 		/// <param name="token">Token.</param>
 		/// <param name="proxy">Proxy.</param>
-		public void ConnectionToServer (string serverIP, int port, string token)
+		internal void ConnectionToServer (string serverIP, int port, string token)
 		{
 			this.port = port;
 			this.serverIP = serverIP;
@@ -148,7 +148,7 @@ namespace Transmitter.Net
 			}
 		}
 
-		public void SendMessageToServer(byte[] buffer)
+		internal void SendMessageToServer(byte[] buffer)
 		{
 			if (IsConnected) 
 			{
@@ -158,7 +158,7 @@ namespace Transmitter.Net
 
 		#region unity life circly
 
-		public List<byte[]> PopAllReceiveMessages()
+		internal List<byte[]> PopAllReceiveMessages()
 		{
 			List<byte[]> cache = null;
 
@@ -181,7 +181,7 @@ namespace Transmitter.Net
 			return cache;
 		}
 
-		public void Close()
+		internal void Close()
 		{
 			recursivelyConnect = null;
 			tcpClient.Close ();
@@ -196,7 +196,7 @@ namespace Transmitter.Net
 
 		Coroutine sharkHandCoroutine;
 
-		public void Update()
+		internal void Update()
 		{
 			if (!connected) 
 			{
@@ -215,7 +215,6 @@ namespace Transmitter.Net
 		void SharkHand()
 		{
 			messageAdapter.BindLobbyEvent (Consts.NetworkEvents.NewUserReq, ReceiveExistMembers);
-			Debug.Log ("Bind");
 			lock (runSharkHandHookLocker) 
 			{
 				runSharkHandHook = true;
@@ -239,16 +238,13 @@ namespace Transmitter.Net
 					yield break;
 				}
 			}
-
-			Debug.Log (newUserReq!=null);
-			Debug.Log ("UnBind");
 			messageAdapter.UnBindLobbyEvent (Consts.NetworkEvents.NewUserReq, ReceiveExistMembers);
 
 			NewUserRes newUserRes = new NewUserRes (){ Token = this.token };
 			messageAdapter.SendLobbyMessage (Consts.NetworkEvents.NewUserRes, newUserRes);
 
 			UserData owner = UserData.Create (newUserReq.NewUserUDID, this.token);
-			transmitter_Client.LobbyController.OnJoinLobby (newUserReq.UserDatas, owner);
+			transmitter_Client.OnJoinLobby (newUserReq.UserDatas, owner);
 		}
 
 		const float waitNewUserReqTimeout = 5;

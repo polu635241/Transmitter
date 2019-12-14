@@ -6,15 +6,15 @@ using System.Net.Sockets;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Transmitter.Net;
 
-namespace Transmitter.Net.Model
+namespace Transmitter.Model
 {
 	public class Channel
 	{
-		static List<string> usedChannelKeys = new List<string>();
 		MessageAdapter messageAdapter;
 
-		Channel (string channelkey, MessageAdapter messageAdapter)
+		internal Channel (string channelkey, MessageAdapter messageAdapter)
 		{
 			this.channelkey = channelkey;
 			this.messageAdapter = messageAdapter;
@@ -27,20 +27,6 @@ namespace Transmitter.Net.Model
 			get
 			{
 				return channelkey;
-			}
-		}
-
-		public static Channel ChannelFactory (string channelKey, MessageAdapter messageController)
-		{
-			if (!usedChannelKeys.Contains (channelKey)) 
-			{
-				usedChannelKeys.Add (channelKey);
-
-				return new Channel (channelKey, messageController);
-			}
-			else 
-			{
-				throw new UnityException (string.Format ("已存在相同key 的Channel -> {0}", channelKey));
 			}
 		}
 
@@ -123,9 +109,25 @@ namespace Transmitter.Net.Model
 
 		#endregion
 
+		/// <summary>
+		/// 全域發送
+		/// </summary>
+		/// <param name="eventName">Event name.</param>
+		/// <param name="objs">Objects.</param>
 		public void Send(string eventName,params System.Object[] objs)
 		{
-			messageAdapter.SendGameMessage (this.channelkey,eventName,objs);
+			messageAdapter.SendGameMessage ((short)-1, this.channelkey, eventName, objs);
+		}
+
+		/// <summary>
+		/// 發送給指定使用者
+		/// </summary>
+		/// <param name="assignUdid">Assign udid.</param>
+		/// <param name="eventName">Event name.</param>
+		/// <param name="objs">Objects.</param>
+		public void SendAssign (ushort assignUdid, string eventName, params System.Object[] objs)
+		{
+			messageAdapter.SendGameMessage ((short)assignUdid, this.channelkey, eventName, objs);
 		}
 	}
 }

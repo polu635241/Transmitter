@@ -6,7 +6,7 @@ using System.Net.Sockets;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using Transmitter.Net.Model;
+using Transmitter.Model;
 
 namespace Transmitter.Net
 {
@@ -15,6 +15,8 @@ namespace Transmitter.Net
 	public class MessageAdapter{
 
 		MessageProcesser messageProcesser;
+
+		Transmitter_Client client;
 
 		object waitSendMessageLocker;
 
@@ -26,7 +28,7 @@ namespace Transmitter.Net
 
 		Dictionary<ushort,List<Action<string>>> lobbyCallbackTable = new Dictionary<ushort, List<Action<string>>> ();
 
-		public void BindLobbyEvent(ushort header, Action<string> callback)
+		internal void BindLobbyEvent(ushort header, Action<string> callback)
 		{
 			List<Action<string>> callbacks = null;
 
@@ -40,7 +42,7 @@ namespace Transmitter.Net
 			callbacks.Add (callback);
 		}
 
-		public void UnBindLobbyEvent(ushort header, Action<string> callback)
+		internal void UnBindLobbyEvent(ushort header, Action<string> callback)
 		{
 			List<Action<string>> callbacks = null;
 
@@ -57,8 +59,9 @@ namespace Transmitter.Net
 		/// <summary>
 		/// 只能在主線程呼叫Init以便記錄unity thread主線程是誰
 		/// </summary>
-		public MessageAdapter()
+		internal MessageAdapter(Transmitter_Client client)
 		{
+			this.client = client;
 			waitSendMessageLocker = new object ();
 			waitSendMessages = new List<byte[]> ();
 			messageProcesser = new MessageProcesser (this);
@@ -69,7 +72,7 @@ namespace Transmitter.Net
 		/// 讓外部傳入轉換成封包的byte[]
 		/// </summary>
 		/// <param name="messages">Messages.</param>
-		public void AddProcessedSendMessage(byte[] messages)
+		internal void AddProcessedSendMessage(byte[] messages)
 		{
 			lock (waitSendMessageLocker) 
 			{
@@ -84,13 +87,13 @@ namespace Transmitter.Net
 			}
 		}
 
-		public void Update()
+		internal void Update()
 		{
 			messageProcesser.Update ();	
 		}
 
 		#region trigger in unity life circly
-		public List<byte[]> PopAllWaitSendMessages()
+		internal List<byte[]> PopAllWaitSendMessages()
 		{
 			List<byte[]> _waitSendMessage = null;
 
@@ -117,14 +120,27 @@ namespace Transmitter.Net
 
 		#endregion
 
-		public void ReceiveMessage(byte[] buffer)
+		internal void ReceiveMessage(byte[] buffer)
 		{
 			messageProcesser?.AddReceiveMessage (buffer);
 		}
 
 		//接收處理完成的封包 並找到對應的callback進行觸發
-		public void ReceiveProcessGameMessage(GameMessageData data)
+		internal void ReceiveProcessGameMessage(GameMessageData data)
 		{
+			bool assignSelfMessage = false;
+
+			if (data.AssignUdid == -1 || data.AssignUdid == client.LobbyController.Owner.Udid) 
+			{
+				assignSelfMessage = true;
+			}
+
+			//這個封包不是給我的
+			if (!assignSelfMessage) 
+			{
+				return;
+			}
+			
 			EventNamePairDelegats eventNamePairDelegats;
 
 			if(gameCallbackTable.TryGetValue(data.ChannelName,out eventNamePairDelegats))
@@ -135,19 +151,11 @@ namespace Transmitter.Net
 				{
 					bindCacheData.Trigger (data.Objs);
 				}
-				else
-				{
-					throw new UnityException ("指定的event name不存在 -> " + data.EventName);
-				}
-			}
-			else
-			{
-				throw new UnityException ("指定的channel名稱不存在  -> " + data.ChannelName);
 			}
 		}
 
 		//接收處理完成的封包 並找到對應的callback進行觸發
-		public void ReceiveProcessLobbyMessage(LobbyMessageData data)
+		internal void ReceiveProcessLobbyMessage(LobbyMessageData data)
 		{
 			EventNamePairDelegats eventNamePairDelegats;
 
@@ -169,42 +177,42 @@ namespace Transmitter.Net
 		#region Invoke by Channel
 
 		#region Generic Bind
-		public void Bind(string channelName,string eventName,Action callback)
+		internal void Bind(string channelName,string eventName,Action callback)
 		{
 			ChannelBindCacheData bindCacheData = GetBindCacheData (channelName, eventName);
 
 			bindCacheData.BindAction (callback);
 		}
 
-		public void Bind(string channelName,string eventName,Action<object> callback)
+		internal void Bind(string channelName,string eventName,Action<object> callback)
 		{
 			ChannelBindCacheData bindCacheData = GetBindCacheData (channelName, eventName);
 
 			bindCacheData.BindAction (callback);
 		}
 
-		public void Bind(string channelName,string eventName,Action<object,object> callback)
+		internal void Bind(string channelName,string eventName,Action<object,object> callback)
 		{
 			ChannelBindCacheData bindCacheData = GetBindCacheData (channelName, eventName);
 
 			bindCacheData.BindAction (callback);
 		}
 
-		public void Bind(string channelName,string eventName,Action<object,object,object> callback)
+		internal void Bind(string channelName,string eventName,Action<object,object,object> callback)
 		{
 			ChannelBindCacheData bindCacheData = GetBindCacheData (channelName, eventName);
 
 			bindCacheData.BindAction (callback);
 		}
 
-		public void Bind(string channelName,string eventName,Action<object,object,object,object> callback)
+		internal void Bind(string channelName,string eventName,Action<object,object,object,object> callback)
 		{
 			ChannelBindCacheData bindCacheData = GetBindCacheData (channelName, eventName);
 
 			bindCacheData.BindAction (callback);
 		}
 
-		public void Bind(string channelName,string eventName,Action<object,object,object,object,object> callback)
+		internal void Bind(string channelName,string eventName,Action<object,object,object,object,object> callback)
 		{
 			ChannelBindCacheData bindCacheData = GetBindCacheData (channelName, eventName);
 
@@ -213,42 +221,42 @@ namespace Transmitter.Net
 		#endregion
 
 		#region Generic UnBind
-		public void UnBind(string channelName,string eventName,Action callback)
+		internal void UnBind(string channelName,string eventName,Action callback)
 		{
 			ChannelBindCacheData bindCacheData = GetBindCacheData (channelName, eventName);
 
 			bindCacheData.UnBindAction (callback);
 		}
 
-		public void UnBind(string channelName,string eventName,Action<object> callback)
+		internal void UnBind(string channelName,string eventName,Action<object> callback)
 		{
 			ChannelBindCacheData bindCacheData = GetBindCacheData (channelName, eventName);
 
 			bindCacheData.UnBindAction (callback);
 		}
 
-		public void UnBind(string channelName,string eventName,Action<object,object> callback)
+		internal void UnBind(string channelName,string eventName,Action<object,object> callback)
 		{
 			ChannelBindCacheData bindCacheData = GetBindCacheData (channelName, eventName);
 
 			bindCacheData.UnBindAction (callback);
 		}
 
-		public void UnBind(string channelName,string eventName,Action<object,object,object> callback)
+		internal void UnBind(string channelName,string eventName,Action<object,object,object> callback)
 		{
 			ChannelBindCacheData bindCacheData = GetBindCacheData (channelName, eventName);
 
 			bindCacheData.UnBindAction (callback);
 		}
 
-		public void UnBind(string channelName,string eventName,Action<object,object,object,object> callback)
+		internal void UnBind(string channelName,string eventName,Action<object,object,object,object> callback)
 		{
 			ChannelBindCacheData bindCacheData = GetBindCacheData (channelName, eventName);
 
 			bindCacheData.UnBindAction (callback);
 		}
 
-		public void UnBind(string channelName,string eventName,Action<object,object,object,object,object> callback)
+		internal void UnBind(string channelName,string eventName,Action<object,object,object,object,object> callback)
 		{
 			ChannelBindCacheData bindCacheData = GetBindCacheData (channelName, eventName);
 
@@ -284,12 +292,19 @@ namespace Transmitter.Net
 			return bindCacheData;
 		}
 
-		public void SendGameMessage (string channelName, string eventName, params System.Object[] objs)
+		/// <summary>
+		/// 指定訊息只有指定使用可以收到 -1則是全域訊息
+		/// </summary>
+		/// <param name="assignUdid">Assign udid.</param>
+		/// <param name="channelName">Channel name.</param>
+		/// <param name="eventName">Event name.</param>
+		/// <param name="objs">Objects.</param>
+		internal void SendGameMessage (short assignUdid, string channelName, string eventName, params System.Object[] objs)
 		{
-			messageProcesser.AddSendGameMessage (channelName, eventName, objs);
+			messageProcesser.AddSendGameMessage (assignUdid, channelName, eventName, objs);
 		}
 
-		public void SendLobbyMessage (ushort header, object content)
+		internal void SendLobbyMessage (ushort header, object content)
 		{
 			messageProcesser.AddSendLobbyMessage (header, content);
 		}
@@ -297,15 +312,33 @@ namespace Transmitter.Net
 		#endregion
 
 		#region Factory
-		public Channel BindChannel(string channelKey)
+		/// <summary>
+		/// 不使用static搭配工廠方法是因為要支援一個project可能會有兩個client 這時候他們 開啟同樣名字的channel就會被鎖定
+		/// 所以以每個client最為分界 個別擁有各自的channel集合
+		/// </summary>
+		/// <returns>The factory.</returns>
+		/// <param name="channelKey">Channel key.</param>
+		/// <param name="messageController">Message controller.</param>
+		internal Channel BindChannel (string channelKey)
 		{
-			Channel channel = Channel.ChannelFactory (channelKey, this);
-			channelTable.Add (channel);
-			return channel;
+			if (!usedChannelKeys.Contains (channelKey)) 
+			{
+				usedChannelKeys.Add (channelKey);
+
+				Channel newChannel = new Channel (channelKey, this);
+				channelTable.Add (newChannel);
+				return newChannel;
+			}
+			else 
+			{
+				throw new UnityException (string.Format ("已存在相同key 的Channel -> {0}", channelKey));
+			}
 		}
+
+		List<string> usedChannelKeys = new List<string>();
 		#endregion
 
-		public void Close()
+		internal void Close()
 		{
 			messageProcesser?.Close ();
 		}

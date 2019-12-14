@@ -11,7 +11,7 @@ using UnityEngine;
 using Transmitter.Serialize;
 using Transmitter.DataStruct;
 
-namespace Transmitter.Net.Model
+namespace Transmitter.Model
 {
 	[Serializable]
 	public class LobbyMessageData
