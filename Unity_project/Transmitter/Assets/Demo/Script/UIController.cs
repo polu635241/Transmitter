@@ -9,9 +9,6 @@ namespace Transmitter.Demo.UI
 	[Serializable]
 	public class UIController
 	{
-		const string FormatRenameMessage = "{0} 更名為 {1}";
-		const string FormatSendMessage = "{0} : {1}";
-		
 		public UIController(NetworkPlayer netWorkPlayer)
 		{
 			this.netWorkPlayer = netWorkPlayer;
@@ -112,7 +109,7 @@ namespace Transmitter.Demo.UI
 
 		public void ReceiveRenameMessage (string oldName, string newName)
 		{
-			string processMessage = string.Format (FormatRenameMessage, oldName, newName);
+			string processMessage = string.Format (DemoConsts.Formats.FormatRenameMessage, oldName, newName);
 			dialogBox.Input (processMessage);
 		}
 
@@ -123,7 +120,7 @@ namespace Transmitter.Demo.UI
 
 		public void ReceiveTalkMessage (string playerName, string message)
 		{
-			string processMessage = string.Format (FormatSendMessage, playerName, message);
+			string processMessage = string.Format (DemoConsts.Formats.FormatSendMessage, playerName, message);
 			dialogBox.Input (processMessage);
 		}
 	}

@@ -13,8 +13,6 @@ namespace Transmitter.Demo
 {
 	public class NetworkPlayer : MonoBehaviour 
 	{
-		const string DefaultPlayerNameFormat = "Player{0}";
-		
 		[SerializeField][ReadOnly]
 		Transmitter_Client client;
 
@@ -73,7 +71,7 @@ namespace Transmitter.Demo
 		void OnJoinLobby(List<UserData> others, UserData owner)
 		{
 			ushort udid = owner.Udid;
-			string defaultName = string.Format (DefaultPlayerNameFormat, udid);
+			string defaultName = string.Format (DemoConsts.Formats.DefaultPlayerNameFormat, udid);
 
 			networkPlayerData = new NetworkPlayerData (udid, defaultName);
 
@@ -139,7 +137,7 @@ namespace Transmitter.Demo
 		void OnUserAdd(UserData userData)
 		{
 			ushort udid = userData.Udid;
-			string defaultName = string.Format (DefaultPlayerNameFormat, udid);
+			string defaultName = string.Format (DemoConsts.Formats.DefaultPlayerNameFormat, udid);
 
 			uiController.CreateOtherPlayerField (defaultName, udid);
 			networkMapper.SetPlayerNamePair (defaultName, udid);

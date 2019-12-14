@@ -29,6 +29,13 @@ namespace Transmitter.Demo
 			public const string CommentText = "CommentText";
 		}
 
+		public static class Formats
+		{
+			public const string DefaultPlayerNameFormat = "Player{0}";
+			public const string FormatRenameMessage = "{0} 更名為 {1}";
+			public const string FormatSendMessage = "{0} : {1}";
+		}
+
 		public static class Resources
 		{
 			public const string OwnerPlayerField = "OwnerPlayerField";
