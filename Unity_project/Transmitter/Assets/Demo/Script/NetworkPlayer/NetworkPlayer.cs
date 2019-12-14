@@ -112,12 +112,13 @@ namespace Transmitter.Demo
 					otherPlayerNamePair.Clear ();
 					yield return null;
 				}
-
-				otherPlayerNamePair.ForEach (pair=>
-					{
-						uiController.CreateOtherPlayerField(pair.value, pair.key);
-					});
 			}
+
+			otherPlayerNamePair.ForEach (pair=>
+				{
+					uiController.CreateOtherPlayerField(pair.value, pair.key);
+				});
+			uiController.UnLockInputControllers ();
 
 			public_Channel.UnBind<string,ushort> (DemoConsts.Events.Rename, UpdateName);
 

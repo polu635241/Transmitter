@@ -51,10 +51,12 @@ namespace Transmitter.Demo.UI
 			InputField renameInputField = refBinder.GetComponent<InputField> (DemoConsts.AssetKeys.RenameInputField);
 			Button renameBtn = refBinder.GetComponent<Button> (DemoConsts.AssetKeys.RenameBtn);
 			sendRenameMessageController = new InputController (renameInputField, renameBtn, SendRenameMessage);
+			sendRenameMessageController.Lock ();
 
 			InputField talkInputField = refBinder.GetComponent<InputField> (DemoConsts.AssetKeys.TalkInputField);
 			Button talkBtn = refBinder.GetComponent<Button> (DemoConsts.AssetKeys.TalkBtn);
 			sendTalkMessageController = new InputController (talkInputField, talkBtn, SendTalkMessage);
+			sendTalkMessageController.Lock ();
 		}
 
 		public void CreateOwnerPlayerField(string playerName, ushort udid)
@@ -122,6 +124,12 @@ namespace Transmitter.Demo.UI
 		{
 			string processMessage = string.Format (DemoConsts.Formats.FormatSendMessage, playerName, message);
 			dialogBox.Input (processMessage);
+		}
+
+		public void UnLockInputControllers()
+		{
+			sendRenameMessageController.UnLock ();
+			sendTalkMessageController.UnLock ();
 		}
 	}
 }

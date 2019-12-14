@@ -49,5 +49,22 @@ namespace Transmitter.Demo.UI
 			inputField.text = "";
 		}
 
+		/// <summary>
+		///  鎖定輸入框以及按鈕
+		/// </summary>
+		public void Lock()
+		{
+			inputField.interactable = false;
+			flushBtn.interactable = false;
+		}
+			
+		/// <summary>
+		///  解鎖輸入框以及按鈕
+		/// </summary>
+		public void UnLock()
+		{
+			inputField.interactable = true;
+			flushBtn.interactable = true;
+		}
 	}
 }
