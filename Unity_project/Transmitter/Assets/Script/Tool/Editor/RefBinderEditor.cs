@@ -155,12 +155,16 @@ namespace Transmitter.Tool
 					//做修改的當下
 					if(newGO!=newRefGatherGo)
 					{
-						//如果舊的key與舊的物件的名稱不一樣 代表這個key被使用者修改過 所以要保留
-						if((newRefGatherGo==null)||(newRefGatherKey==newRefGatherGo.name))
-						{
-							newRefGatherKey = newGO.name;
-						}
 						newRefGatherGo = newGO;
+
+						//如果本來有值那就保留 本來沒有值 才要替他補上
+						if(newGO!=null)
+						{
+							if(string.IsNullOrEmpty(newRefGatherKey))
+							{
+								newRefGatherKey = newGO.name;
+							}
+						}
 					}
 
 
