@@ -34,6 +34,11 @@ namespace Transmitter.Demo
 			public const string DefaultPlayerNameFormat = "Player{0}";
 			public const string FormatRenameMessage = "{0} 更名為 {1}";
 			public const string FormatSendMessage = "{0} : {1}";
+
+			public const string JoinLobbyFormat = "{0} 進入大廳";
+
+			public const string AddPlayerFormat = "{0} 已加入房間";
+			public const string RemovePlayerFormat = "{0} 已離開房間";
 		}
 
 		public static class Resources

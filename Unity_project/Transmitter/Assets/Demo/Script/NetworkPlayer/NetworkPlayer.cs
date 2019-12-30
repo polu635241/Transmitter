@@ -76,12 +76,14 @@ namespace Transmitter.Demo
 			networkPlayerData = new NetworkPlayerData (udid, defaultName);
 
 			uiController.CreateOwnerPlayerField (defaultName, udid);
+			uiController.ShowJoinLobbyMsg (defaultName);
+
 			networkMapper.SetPlayerNamePair (defaultName, udid);
 
-			StartCoroutine (PlayerSharkHandCoroutine ());
+			StartCoroutine (PlayerSharkHandCoroutine (udid));
 		}
 
-		IEnumerator PlayerSharkHandCoroutine()
+		IEnumerator PlayerSharkHandCoroutine(ushort ownerUdid)
 		{
 			bool recevieAllPlayerName = false;
 
@@ -118,6 +120,7 @@ namespace Transmitter.Demo
 				{
 					uiController.CreateOtherPlayerField(pair.value, pair.key);
 				});
+
 			uiController.UnLockInputControllers ();
 
 			public_Channel.UnBind<string,ushort> (DemoConsts.Events.Rename, UpdateName);
@@ -141,6 +144,7 @@ namespace Transmitter.Demo
 			string defaultName = string.Format (DemoConsts.Formats.DefaultPlayerNameFormat, udid);
 
 			uiController.CreateOtherPlayerField (defaultName, udid);
+			uiController.ShowOnAddPlayerMsg (defaultName);
 			networkMapper.SetPlayerNamePair (defaultName, udid);
 
 			string currentName = networkPlayerData.PlayerName;
@@ -150,6 +154,17 @@ namespace Transmitter.Demo
 		void OnUserRemove(UserData userData)
 		{
 			uiController.RemoveOtherPlayerNameField (userData.Udid);
+
+			string onRemovePlayerName = "";
+
+			if (networkMapper.TryGetPlayerName (userData.Udid, out onRemovePlayerName)) 
+			{
+				uiController.ShowOnRemovePlayerMsg (onRemovePlayerName);
+			}
+			else
+			{
+				Debug.LogError ($"找不到對應的玩家名稱 -> {userData.Udid}");
+			}
 		}
 
 		public void SendTalkMessage(string message)
