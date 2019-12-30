@@ -46,7 +46,7 @@ namespace Transmitter.Tool
 	[Serializable]
 	class RefGather
 	{
-		public string key;
-		public GameObject go;
+		public string key = "";
+		public GameObject go = null;
 	}
 }

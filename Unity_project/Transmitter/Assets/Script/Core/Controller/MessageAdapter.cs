@@ -157,8 +157,6 @@ namespace Transmitter.Net
 		//接收處理完成的封包 並找到對應的callback進行觸發
 		internal void ReceiveProcessLobbyMessage(LobbyMessageData data)
 		{
-			EventNamePairDelegats eventNamePairDelegats;
-
 			List<Action<string>> callbacks = null;
 
 			if (lobbyCallbackTable.TryGetValue (data.Header, out callbacks))

@@ -53,7 +53,6 @@ namespace Transmitter.TypeSettingDataFactory.Model
 		void ProcessFieldData(FieldSettingData fieldSettingData)
 		{
 			string fieldName = fieldSettingData.fieldName;
-			string typeName = fieldSettingData.typeName;
 			
 			//repeated的話 先寫入長度 然後依序寫入單體
 			if (fieldSettingData.fieldAttribute == FieldAttribute.array || fieldSettingData.fieldAttribute == FieldAttribute.list) 

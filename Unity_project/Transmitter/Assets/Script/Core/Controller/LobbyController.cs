@@ -63,8 +63,6 @@ namespace Transmitter.Net
 
 		private List<UserData> otherMembers = new List<UserData>();
 
-		LobbylBindCacheData lobbylBindCacheData = new LobbylBindCacheData();
-
 		#region LobbyEvent
 
 		/// <summary>

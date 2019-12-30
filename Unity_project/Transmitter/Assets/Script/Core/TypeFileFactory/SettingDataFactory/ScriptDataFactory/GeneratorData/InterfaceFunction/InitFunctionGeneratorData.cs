@@ -57,8 +57,6 @@ namespace Transmitter.TypeSettingDataFactory.Model
 			{
 				string nameAndLengthFiled = $"{fieldSettingData.fieldName}ReapeatedCount";
 
-				int count;
-
 				string readLengthLine = $"int {nameAndLengthFiled} = binaryReader.ReadInt16();";
 				ProcessAddLine (readLengthLine,1);
 

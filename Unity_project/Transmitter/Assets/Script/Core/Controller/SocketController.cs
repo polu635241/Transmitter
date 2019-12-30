@@ -24,13 +24,6 @@ namespace Transmitter.Net
 			}
 		}
 
-		[SerializeField][ReadOnly]
-		int port;
-
-		[SerializeField][ReadOnly]
-		string serverIP;
-
-		[SerializeField][ReadOnly]
 		string token;
 
 		#endregion	
@@ -84,8 +77,6 @@ namespace Transmitter.Net
 		/// <param name="proxy">Proxy.</param>
 		internal void ConnectionToServer (string serverIP, int port, string token)
 		{
-			this.port = port;
-			this.serverIP = serverIP;
 			this.token = token;
 
 			Debug.Log($"開始嘗試連線 ip -> {serverIP}, port -> {port}");
@@ -124,18 +115,24 @@ namespace Transmitter.Net
 					byte[] buffer = new byte[2048];
 					int receiveLength = tcpClient.Client.Receive(buffer);
 
-					lock(receiveMessageLocker)
+					if(receiveLength!=0)
 					{
-						try
+						lock(receiveMessageLocker)
 						{
-							receiveMessages.Add(buffer);
-						}
-						catch (Exception e)
-						{
-							Debug.Log(e.Message);
+							try
+							{
+								receiveMessages.Add(buffer);
+							}
+							catch (Exception e)
+							{
+								Debug.Log(e.Message);
+							}
 						}
 					}
-
+					else
+					{
+						Debug.Log("不該收到長度為0的封包");
+					}
 				} 
 				catch(SocketException e)
 				{
