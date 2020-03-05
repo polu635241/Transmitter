@@ -836,4 +836,35 @@ namespace Transmitter.Tool
 			}
 		}
 	}
+
+	[Serializable]
+	public class Vector3Json
+	{
+		public float X;
+		public float Y;
+		public float Z;
+
+		public Vector3Json()
+		{
+		}
+
+		public Vector3Json(Vector3 vector)
+		{
+			X = vector.x;
+			Y = vector.y;
+			Z = vector.z;
+		}
+
+		public Vector3Json(float X, float Y, float Z)
+		{
+			this.X = X;
+			this.Y = Y;
+			this.Z = Z;
+		}
+
+		public Vector3 GetValue()
+		{
+			return new Vector3(X, Y, Z);
+		}
+	}
 }

@@ -55,6 +55,26 @@ namespace Transmitter.Tool
 			EditorGUILayout.EndVertical ();
 		}
 
+		public static void ForEach(this SerializedProperty arrayProperty,Action<SerializedProperty> loopAction)
+		{
+			int originSize = arrayProperty.arraySize;
 
+			for (int i = 0; i < originSize; i++) 
+			{
+				SerializedProperty item = arrayProperty.GetArrayElementAtIndex (i);
+				loopAction.Invoke (item);
+			}
+		}
+
+		public static void ForEach(this SerializedProperty arrayProperty,Action<SerializedProperty,int> loopAction)
+		{
+			int originSize = arrayProperty.arraySize;
+
+			for (int i = 0; i < originSize; i++) 
+			{
+				SerializedProperty item = arrayProperty.GetArrayElementAtIndex (i);
+				loopAction.Invoke (item, i);
+			}
+		}
 	}
 }
