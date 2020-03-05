@@ -131,5 +131,23 @@ namespace Transmitter.Demo.UI
 			sendRenameMessageController.UnLock ();
 			sendTalkMessageController.UnLock ();
 		}
+
+		public void ShowJoinLobbyMsg(string playerName)
+		{
+			string processMessage = string.Format (DemoConsts.Formats.JoinLobbyFormat, playerName);
+			dialogBox.Input (processMessage);
+		}
+
+		public void ShowOnAddPlayerMsg(string playerName)
+		{
+			string processMessage = string.Format (DemoConsts.Formats.AddPlayerFormat, playerName);
+			dialogBox.Input (processMessage);
+		}
+
+		public void ShowOnRemovePlayerMsg(string playerName)
+		{
+			string processMessage = string.Format (DemoConsts.Formats.RemovePlayerFormat, playerName);
+			dialogBox.Input (processMessage);
+		}
 	}
 }

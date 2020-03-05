@@ -11,10 +11,6 @@ namespace Transmitter.Serialize
 		{
 			deserializeFunctionTable = new Dictionary<string, Func<byte[], object>> ();
 
-			Func<byte[], object> ConvertToBoolProcess = (Buffer) => {
-				return (Object)BuiltInTypeUtility.Deserilize.BufferConvertToBool(Buffer);
-			};
-
 			deserializeFunctionTable.Add ("System.Boolean", (msg)=>
 				{
 					return BuiltInTypeUtility.Deserilize.BufferConvertToBool(msg);

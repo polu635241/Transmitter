@@ -28,11 +28,6 @@ namespace Transmitter.Net
 
 		LobbyController lobbyController;
 
-		[SerializeField][ReadOnly]
-		string serverIP;
-		int port;
-		string token;
-
 		public void Awake()
 		{
 			messageAdapter = new MessageAdapter (this);
@@ -45,10 +40,6 @@ namespace Transmitter.Net
 		/// </summary>
 		public void Connect (string serverIP, int port, string token)
 		{
-			//just cache
-			this.serverIP = serverIP;
-			this.port = port;
-			this.token = token;
 			
 			DontDestroyOnLoad (this.gameObject);
 			socketController.ConnectionToServer (serverIP, port, token);

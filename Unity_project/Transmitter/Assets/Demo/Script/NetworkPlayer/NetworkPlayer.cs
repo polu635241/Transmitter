@@ -45,6 +45,7 @@ namespace Transmitter.Demo
 		{
 			InitController ();
 			InitNeworkEvent ();
+
 			//Token不是帶入玩家名稱的 是用來辨別身分的 
 			client.Connect ("127.0.0.1", 9487, DemoConsts.Tokens.DefaultPlayer);
 		}
@@ -65,6 +66,8 @@ namespace Transmitter.Demo
 		{
 			public_Channel = client.BindChinnel (DemoConsts.Channels.Player);
 			client.RegeistedOnJoinLobby (OnJoinLobby);
+
+			//新玩家進入大廳後 舊有玩家會送出自己的當前名稱給新玩家
 			public_Channel.Bind<string,ushort> (DemoConsts.Events.Rename, UpdateName);
 		}
 
@@ -76,22 +79,24 @@ namespace Transmitter.Demo
 			networkPlayerData = new NetworkPlayerData (udid, defaultName);
 
 			uiController.CreateOwnerPlayerField (defaultName, udid);
+			uiController.ShowJoinLobbyMsg (defaultName);
+
 			networkMapper.SetPlayerNamePair (defaultName, udid);
 
-			StartCoroutine (PlayerSharkHandCoroutine ());
+			StartCoroutine (PlayerSharkHandCoroutine (udid));
 		}
 
-		IEnumerator PlayerSharkHandCoroutine()
+		IEnumerator PlayerSharkHandCoroutine(ushort ownerUdid)
 		{
-			bool recevieAllPlayerName = false;
+			bool recevieAllPlayerNames = false;
 
 			List<RefKeyValuePair<ushort,string>> otherPlayerNamePair = new List<RefKeyValuePair<ushort, string>> ();
 
-			while (!recevieAllPlayerName) 
+			while (!recevieAllPlayerNames) 
 			{
 				List<UserData> userDatas = client.LobbyController.OtherMembers;
 
-				recevieAllPlayerName = userDatas.TrueForAll (userData => 
+				recevieAllPlayerNames = userDatas.TrueForAll (userData => 
 					{
 						string playerName = string.Empty;
 						
@@ -106,7 +111,7 @@ namespace Transmitter.Demo
 						}
 					});
 
-				if (!recevieAllPlayerName) 
+				if (!recevieAllPlayerNames) 
 				{
 					//每一偵玩家都可能增減 所以每次失敗都要清空
 					otherPlayerNamePair.Clear ();
@@ -118,6 +123,7 @@ namespace Transmitter.Demo
 				{
 					uiController.CreateOtherPlayerField(pair.value, pair.key);
 				});
+
 			uiController.UnLockInputControllers ();
 
 			public_Channel.UnBind<string,ushort> (DemoConsts.Events.Rename, UpdateName);
@@ -141,6 +147,7 @@ namespace Transmitter.Demo
 			string defaultName = string.Format (DemoConsts.Formats.DefaultPlayerNameFormat, udid);
 
 			uiController.CreateOtherPlayerField (defaultName, udid);
+			uiController.ShowOnAddPlayerMsg (defaultName);
 			networkMapper.SetPlayerNamePair (defaultName, udid);
 
 			string currentName = networkPlayerData.PlayerName;
@@ -150,6 +157,17 @@ namespace Transmitter.Demo
 		void OnUserRemove(UserData userData)
 		{
 			uiController.RemoveOtherPlayerNameField (userData.Udid);
+
+			string onRemovePlayerName = "";
+
+			if (networkMapper.TryGetPlayerName (userData.Udid, out onRemovePlayerName)) 
+			{
+				uiController.ShowOnRemovePlayerMsg (onRemovePlayerName);
+			}
+			else
+			{
+				Debug.LogError ($"找不到對應的玩家名稱 -> {userData.Udid}");
+			}
 		}
 
 		public void SendTalkMessage(string message)
