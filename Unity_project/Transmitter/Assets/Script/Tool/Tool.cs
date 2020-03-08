@@ -653,7 +653,13 @@ namespace Transmitter.Tool
 			return (T)result;
         }
 
-
+		public static void Map<T> (this List<T> target, Action<int,T> mapCallback)
+		{
+			for (int i = 0; i < target.Count; i++) 
+			{
+				mapCallback (i, target [i]);
+			}
+		}
 
         public static List<T> ToList<T>(this T[] srcArray)
         {

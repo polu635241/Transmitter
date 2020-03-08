@@ -175,6 +175,16 @@ namespace Transmitter.Tool
 			}
 		}
 
+		protected Color TranslucentBlack
+		{
+			get
+			{
+				Color translucentGray = Color.black;
+				translucentGray.a = 0.2f;
+				return translucentGray;
+			}
+		}
+
 		const float SearchFieldWidth = 200f;
 		const float SearchFieldHeight = 10f;
 

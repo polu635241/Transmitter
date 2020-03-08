@@ -6,8 +6,8 @@ using UnityEditor;
 
 namespace Transmitter.Tool
 {
-	public static class EditorTool {
-
+	public static class EditorTool 
+	{
 		public static class GUILayout
 		{
 			public static GUIStyle button = EditorStyles.miniButton;
@@ -55,6 +55,15 @@ namespace Transmitter.Tool
 			EditorGUILayout.EndVertical ();
 		}
 
+		public static void DrawInHandles (Action body)
+		{ 
+			Handles.BeginGUI ();
+			{
+				body.Invoke ();
+			}
+			Handles.EndGUI ();
+		}
+
 		public static void ForEach(this SerializedProperty arrayProperty,Action<SerializedProperty> loopAction)
 		{
 			int originSize = arrayProperty.arraySize;
@@ -75,6 +84,13 @@ namespace Transmitter.Tool
 				SerializedProperty item = arrayProperty.GetArrayElementAtIndex (i);
 				loopAction.Invoke (item, i);
 			}
+		}
+
+		public static T GetCacheData<T> ()  where T : ScriptableObject
+		{
+			string[] dataGuids = UnityEditor.AssetDatabase.FindAssets ($"t:{typeof(T)}", null);
+			string dataPath = UnityEditor.AssetDatabase.GUIDToAssetPath(dataGuids[0]);
+			return UnityEditor.AssetDatabase.LoadAssetAtPath<T> (dataPath);
 		}
 	}
 }
