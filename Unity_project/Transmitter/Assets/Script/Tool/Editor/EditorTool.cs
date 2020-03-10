@@ -8,16 +8,6 @@ namespace Transmitter.Tool
 {
 	public static class EditorTool 
 	{
-		public static class GUILayout
-		{
-			public static GUIStyle button = EditorStyles.miniButton;
-			public static GUIStyle titleName = EditorStyles.label;
-			public static GUIStyle fieldName = EditorStyles.miniLabel;
-			public static float  classSpace = 10f;
-
-			public static GUIStyle boxStyle = GUI.skin.box;
-		}
-
 		public static void DrawInReadOnly(Action body)
 		{
 			GUI.enabled = false;
@@ -53,6 +43,48 @@ namespace Transmitter.Tool
 
 			body.Invoke ();
 			EditorGUILayout.EndVertical ();
+		}
+
+		public static void DrawInProperty (Rect position, SerializedProperty property, GUIContent label, Action body)
+		{
+			EditorGUI.BeginProperty (position, label, property);
+			{
+				body.Invoke ();
+			}
+			EditorGUI.EndProperty ();
+		}
+
+		public static void DrawInNoIndent (Action body)
+		{
+			int originIndent = EditorGUI.indentLevel;
+
+			EditorGUI.indentLevel = 0;
+			{
+				body.Invoke ();
+			}
+			EditorGUI.indentLevel = originIndent;
+		}
+
+		public static void DrawInIndent (Action body)
+		{
+			EditorGUI.indentLevel++;
+			{
+				body.Invoke ();
+			}
+			EditorGUI.indentLevel--;
+		}
+
+		public static Vector2 DrawInScrollView (Vector2 scorllPosition, float scrollBarHeight, Action body)
+		{
+			Vector2 newPosition;
+
+			newPosition = EditorGUILayout.BeginScrollView (scorllPosition, new GUIStyle (), GUILayout.Height (scrollBarHeight));
+			{
+				body.Invoke ();
+			}
+			EditorGUILayout.EndScrollView ();
+
+			return newPosition;
 		}
 
 		public static void DrawInHandles (Action body)

@@ -416,6 +416,53 @@ namespace Transmitter.Tool
 			}
 		}
 
+		protected class RemoveAndCloneCache
+		{
+			public RemoveAndCloneCache(Action<int> removeCallback, Action<int> cloneCallback)
+			{
+				this.removeCallback = removeCallback;
+				this.cloneCallback = cloneCallback;
+
+				removeIndex = null;
+				cloneIndex = null;
+			}
+
+			public int? RemoveIndex
+			{
+				set
+				{
+					removeIndex = value;
+				}
+			}
+
+			public int? CloneIndex
+			{
+				set
+				{
+					cloneIndex = value;
+				}
+			}
+
+			int? removeIndex;
+			int? cloneIndex;
+
+			Action<int> removeCallback; 
+			Action<int> cloneCallback;
+
+			public void Flush()
+			{
+				if (removeIndex != null) 
+				{
+					removeCallback.Invoke (removeIndex.Value);
+				}
+
+				if (cloneIndex != null) 
+				{
+					cloneCallback.Invoke (cloneIndex.Value);
+				}
+			}
+		}
+
 		protected class CollectionModifyCache
 		{
 			public bool hasAdd = false;

@@ -136,7 +136,7 @@ namespace Transmitter.Tool
 					{
 						getRemove = true;
 					}
-				},EditorTool.GUILayout.boxStyle
+				},boxStyle
 			);
 
 			return getRemove;
@@ -205,7 +205,7 @@ namespace Transmitter.Tool
 						}
 
 					}
-				},EditorTool.GUILayout.boxStyle);
+				},boxStyle);
 
 		}
 
