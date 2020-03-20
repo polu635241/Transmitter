@@ -13,6 +13,15 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   messageSettingData:
     typeSettingDatas: []
-    enumSettingDatas: []
-    allTypeNames: []
-    allEnumNames: []
+    enumSettingDatas:
+    - enumName: Weapon
+      items:
+      - Pistol
+      - ShotGun
+      - SnapGun
+    allTypeNames:
+    - Weapon
+    - Prop
+    allEnumNames:
+    - Weapon
+    - Prop
