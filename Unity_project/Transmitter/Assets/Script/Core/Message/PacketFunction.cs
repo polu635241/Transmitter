@@ -66,12 +66,12 @@ namespace Transmitter.Serialize
             }
             else
             {
-                binaryWriter.Write (-1);
+                binaryWriter.Write ((short)-1);
             }
 
             if (root != null)
             {
-                binaryWriter.Write((ushort)root.Count);
+                binaryWriter.Write((short)root.Count);
 
                 for (int i = 0; i < root.Count; i++)
                 {
@@ -81,12 +81,12 @@ namespace Transmitter.Serialize
             }
             else
             {
-                binaryWriter.Write (-1);
+                binaryWriter.Write ((short)-1);
             }
 
             if (ownerWeapons != null)
             {
-                binaryWriter.Write((ushort)ownerWeapons.Count);
+                binaryWriter.Write((short)ownerWeapons.Count);
 
                 for (int i = 0; i < ownerWeapons.Count; i++)
                 {
@@ -97,7 +97,7 @@ namespace Transmitter.Serialize
             }
             else
             {
-                binaryWriter.Write (-1);
+                binaryWriter.Write ((short)-1);
             }
 
             ushort presetWeapon_value = (ushort)presetWeapon;

@@ -22,22 +22,30 @@ namespace Transmitter.Serialize
 
 			string packageDefineUtitltyText = Transmitter.Tool.Tool.GetJson ("PackageDefineUtility");
 
-			Dictionary<string,object> packageDefineUtitltyDict = (Dictionary<string,object>)Json.Deserialize (packageDefineUtitltyText);
-
 			object md5Node = null;
 			string md5ext = "";
+			string newMd5Text = "";
 
-			if (packageDefineUtitltyDict.TryGetValue ("md5", out md5Node)) 
+			Dictionary<string,object> packageDefineUtitltyDict = (Dictionary<string,object>)Json.Deserialize (packageDefineUtitltyText);
+
+			if (packageDefineUtitltyDict == null) 
 			{
-				md5ext = md5Node.ToString ();
+				packageDefineUtitltyDict = new Dictionary<string, object> ();
+			}
+			else
+			{
+				if (packageDefineUtitltyDict.TryGetValue ("md5", out md5Node)) 
+				{
+					md5ext = md5Node.ToString ();
+				}
+
+				MD5 md5 = MD5.Create();
+				byte[] source = Encoding.Default.GetBytes (JsonUtility.ToJson (messageSettingData));
+				byte[] crypto = md5.ComputeHash(source);
+				newMd5Text = Convert.ToBase64String(crypto);
 			}
 
-			MD5 md5 = MD5.Create();
-			byte[] source = Encoding.Default.GetBytes (JsonUtility.ToJson (messageSettingData));
-			byte[] crypto = md5.ComputeHash(source);
-			string newMd5Text = Convert.ToBase64String(crypto);
-
-			if (md5ext!=newMd5Text) 
+			if (string.IsNullOrEmpty (md5ext) || md5ext != newMd5Text)
 			{
 				string newPackageDefineUtitltyText = Transmitter.Tool.Tool.SetJsonNode (packageDefineUtitltyText, "md5", newMd5Text);
 				Transmitter.Tool.Tool.SaveJson ("PackageDefineUtility", newPackageDefineUtitltyText);

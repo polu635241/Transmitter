@@ -31,6 +31,11 @@ namespace Transmitter.Tool
 		{
 			Dictionary<string,object> jsonDict = (Dictionary<string,object>)Json.Deserialize (originJson);
 
+			if (jsonDict == null) 
+			{
+				jsonDict = new Dictionary<string, object> ();
+			}
+
 			if (!jsonDict.ContainsKey (nodeName)) 
 			{
 				jsonDict.Add (nodeName, "");
