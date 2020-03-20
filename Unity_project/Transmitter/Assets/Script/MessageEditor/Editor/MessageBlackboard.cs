@@ -55,7 +55,7 @@ namespace Transmitter.Tool
 
 		GUIStyle noBindEnumGUIStyle;
 
-		[MenuItem("Transmitter/MessageBlackboard/Refresh _F2")]
+		[MenuItem("Transmitter/MessageBlackboard/Refresh %M")]
 		static void Refresh ()
 		{
 			if (instance != null) 
