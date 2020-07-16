@@ -14,7 +14,9 @@ namespace Transmitter.Serialize
 {
 	public class MessageSettingDataUtility {
 
+		#if UNITY_EDITOR
 		[UnityEditor.MenuItem("MessageRouter/RefreshMessageSettingData")]
+		#endif
 		static void RefreshMessageSettingData()
 		{
 			string packageDefineText = Transmitter.Tool.Tool.GetJson ("PackageDefine");
