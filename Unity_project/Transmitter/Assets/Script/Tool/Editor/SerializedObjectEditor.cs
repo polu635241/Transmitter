@@ -17,6 +17,7 @@ namespace Transmitter.Tool
 				return EditorStyles.miniButton;
 			}
 		}
+
 		protected GUIStyle fieldNameGUIStyle
 		{
 			get
@@ -24,11 +25,20 @@ namespace Transmitter.Tool
 				return EditorStyles.miniLabel;
 			}
 		}
+
 		protected GUIStyle titleNameGUIStyle
 		{
 			get
 			{
 				return EditorStyles.label;
+			}
+		}
+
+		protected GUIStyle boxStyle
+		{
+			get
+			{
+				return GUI.skin.box;;
 			}
 		}
 
